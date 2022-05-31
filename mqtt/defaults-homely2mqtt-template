@@ -1,0 +1,21 @@
+#
+# Please make sure you make the user of the service (default domo) the owner of this file
+# in /etc/default/homely2mqtt, and readable only by that user
+# 
+HOMELY_USER=<your-homely-user@email>
+HOMELY_PASSWORD=<your-homely-password>
+#
+# For Home Assistant set both MQTT_DISCOVERY and MQTT_STATE to "homeassistant"
+# Some MQTT implementation uses "hass/status" for the state topic prefix
+#
+MQTT_DISCOVERY="homeassistant"
+MQTT_STATE="homeassistant" 
+# 
+# For Domoticz, you may want to set a "MQTT Auto Discovery Client Gateway with LAN interface" with "homely_ad" as the 
+# auto discovery prefix. The MQTT_STATE just has to  be something different
+# The domoticzurl is used to set the Domoticz alarm state directly. This uses the Domoticz API directly.
+# There is no username/password support, so it is recommended to run this service at the same host as Domoticz
+#
+MQTT_DISCOVERY="homely_ad"
+MQTT_STATE="domoticz/in"
+FLAGS="-v --domoticzurl http://127.0.0.1:8080"

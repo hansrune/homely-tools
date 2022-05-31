@@ -1,0 +1,20 @@
+[Unit]
+Description=Homely to Domoticz interface
+After=network.target domoticz.service
+
+[Service]
+User=domo
+Group=domo
+Environment="FLAGS=-v"
+# .... add secrets etc in here - readable only by domo user
+EnvironmentFile=/etc/default/homely2domoticz
+#
+ExecStart=/usr/bin/python3 -u /opt/homely2domoticz/homely2domoticz.py $FLAGS $STATEIDX 
+WorkingDirectory=/opt/homely2domoticz/
+Restart=always
+User=domo
+RestartSec=30
+#Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

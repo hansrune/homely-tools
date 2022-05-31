@@ -1,0 +1,16 @@
+#
+# Please make sure you make the user of the service (default domo) the owner of this file
+# in /etc/default/homely2mqtt, and readable only by that user
+# 
+HOMELY_USER=<your-homely-user@email>
+HOMELY_PASSWORD=<your-homely-password>
+#
+# For the alarm state multiswitch, create a multiselect virtual switch with the following states:
+#   0 - Disarmed
+#  10 - Armed stay
+#  20 - Armed night
+#  30 - Armed away
+#  40 - Transitioning
+#  50 - Error
+#
+STATEIDX=<DeviceIndex>

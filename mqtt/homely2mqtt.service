@@ -1,0 +1,20 @@
+[Unit]
+Description=Homely to MQTT 
+After=network.target mosquitto.service
+
+[Service]
+User=domo
+Group=domo
+Environment="FLAGS=-v"
+# .... add secrets etc in here - readable only by domo user
+EnvironmentFile=/etc/default/homely2mqtt
+#
+ExecStart=/usr/bin/python3 -u /opt/homely2mqtt/homely2mqtt.py $FLAGS
+WorkingDirectory=/opt/homely2mqtt/
+Restart=always
+User=domo
+RestartSec=30
+#Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
