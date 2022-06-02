@@ -13,6 +13,17 @@ homely_alarmstate = homely_sdk_url + '/alarm/state/'
 
 
 class HomelyAPI:
+    def __init__(self, debug = False, verbose = False ):
+        self.debug      = self.verbose = debug
+        self.verbose    = verbose
+        self.locations  = []
+        self.locationid = 'N/A'
+        self.homestate  = {}
+        self.alarmstate = {}
+        self.auth       = None
+        self.tokenexp   = 0
+        return 
+
     def response(self, op, url, response):
         if self.debug:
             print("---------------------", op, "---------------------")
@@ -41,18 +52,6 @@ class HomelyAPI:
             return self.response(op, url, r)
         except requests.exceptions.RequestException as e:
             raise SystemExit(e)
-
-    def __init__(self, debug = False, verbose = False ):
-        #self.callback = callback
-        self.debug      = self.verbose = debug
-        self.verbose    = verbose
-        self.locations  = []
-        self.locationid = 'N/A'
-        self.homestate  = {}
-        self.alarmstate = {}
-        self.auth       = None
-        self.tokenexp   = 0
-        return 
 
     def login(self, username, password):
         self.auth       = self.post("Login", homely_login_url, json={ 'username' : username, 'password' : password })
@@ -86,11 +85,6 @@ class HomelyAPI:
         else:
             print("Location name ", location, " not found")
             exit(1)
-
-    # def alarmstat(self):
-    #     self.alarmstate = requests.get(homely_alarmstate + self.locationid, headers={ 'Authorization' : 'Bearer ' + self.auth['access_token'] } )
-    #     self.debug_response("Home state", self.alarmstate)
-    #     return json.loads(self.alarmstate.text)
 
     def homestatus(self):
         return self.get("Home status", homely_homes + self.locationid, headers={ 'Authorization' : 'Bearer ' + self.auth['access_token'] } )

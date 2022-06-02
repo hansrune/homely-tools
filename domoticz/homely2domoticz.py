@@ -4,7 +4,6 @@ from HomelyAPI import *
 
 progname = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 
-
 def on_message(ws, message):
 	print(message)
 
@@ -32,8 +31,7 @@ def alarmlevels(state):
         'ARMED_AWAY':        '30'
     }.get(state,'')
 
-
-def_user   = def_password =  seccode  = ""
+def_user = def_password = seccode  = ""
 try:
 	def_user = os.environ['HOMELY_USER']
 except KeyError:
@@ -56,8 +54,6 @@ argp.add_argument('-d','--debug',       action="store_true",             help="D
 argp.add_argument('-t','--token',       action="store_true",             help="Login and print access token")
 argp.add_argument('-v','--verbose',     action="store_true",             help="Verbose")
 args=argp.parse_args()
-
-# print(args)
 
 domoticz_stateidx = str(args.stateidx[0])
 
@@ -105,8 +101,6 @@ if args.save != "":
 
 print('------------------------- Domoticz settings -------------------------------')
 domoticz_settings = h.get("Domoticz settings", args.domoticzurl + '/json.htm?type=settings')
-#type(domoticz_settings)
-#print(domoticz_settings)
 
 domoticz_seccode  = domoticz_settings['SecPassword']
 if args.verbose:

@@ -1,8 +1,6 @@
 import json
-import yaml, time
-# import os
-# from numpy import dtype
-# from datetime import datetime
+import yaml
+import time
 
 import paho.mqtt.client as mqtt
 
@@ -21,8 +19,6 @@ def devtype_component(dt):
 def devtype_class(dt):
     return {
         'selector':         'select',
-        # 'switch':           'switch',
-        # 'tamper':           'tamper',
         'linkpercent':      None,
         'dummy':            None
     }.get(dt, dt)

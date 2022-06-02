@@ -66,6 +66,7 @@ On initial setup, some prereqs need to be set up
 
 3. A separate user account for running the service is recommended. The default setup assumes that user `domo` exists
 
+
 ### Install or update steps
 
 If you are happy with running the service from `/opt/homely2mqtt` from the `domo` user, you can install or update as follows:
@@ -77,4 +78,23 @@ mqtt/install-mqtt.sh
 After some prereq tests, the commands done are echoed - just to make it easier to understand the setup process, and possibly adapt things as needed.
 
 You will have to break the `journalctl -fu` command being run at the end of the install / update script.
+
+### Configurtion options
+
+Available command line options can be found from `/opt/homely2mqtt/homely2mqtt.py -h`
+
+Normally, command line options will be added to `FLAGS` settings in the systemctl service definition file (`homely2mqtt.service`)
+
+Settings like username and password should be added to the service environment file (`/etc/default/homely2mqtt`) with strict permissions (`chmod 600 /etc/default/homely2mqtt`). 
+
+You should also run the service as a dedicated user (default *domo*) to avoid exposing the environment to non-root users. If you want to change this username, modify `homely2mqtt.service`
+
+Available environment settings:
+
+* `HOMELY_USER` - Your Homely username (normally your email address)
+* `HOMELY_PASSWORD` - Your Homely password
+* `MQTT_DISCOVERY` - The MQTT discovery topic prefix, normally *homeassistant* 
+* `MQTT_STATE` - The MQTT state topic prefix. For HA users, this is normally also *homeassistant* or *hass/status*
+* `MQTT_SERVER` - Defaults to 127.0.0.1
+* `MQTT_PORT` - Defaults to 1883
 

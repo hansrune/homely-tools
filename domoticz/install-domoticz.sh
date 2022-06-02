@@ -26,8 +26,16 @@ set -x
 sudo mkdir -p ${DESTDIR}
 sudo chown ${USER} ${DESTDIR}
 
-cp -v ${SRCDIR}/${SERVICE}.py ${SRCDIR}/${SERVICE}.service ${SRCDIR}/../API/HomelyAPI.py ${DESTDIR}/
-sudo cp -v ${SRCDIR}/${SERVICE}.service /lib/systemd/system/${SERVICE}.service
+if [ -f "${DESTDIR}/${SERVICE}.service" ] 
+then
+    echo "${PROG}: Leaving existing ${DESTDIR}/${SERVICE}.service as is. To update: cp -v ${SRCDIR}/${SERVICE}.service ${DESTDIR}/${SERVICE}.service"
+else
+    cp -v ${SRCDIR}/${SERVICE}.service ${DESTDIR}/${SERVICE}.service
+fi
+cp -v ${SRCDIR}/${SERVICE}.py ${SRCDIR}/../API/HomelyAPI.py ${DESTDIR}/
+chmod u=rwx,go=rx ${DESTDIR}/*.py
+chmod a+rX ${DESTDIR} ${DESTDIR}/*
+sudo cp -v ${DESTDIR}/${SERVICE}.service /lib/systemd/system/${SERVICE}.service
 sudo systemctl daemon-reload
 sudo systemctl restart ${SERVICE}
 sudo systemctl enable ${SERVICE}
