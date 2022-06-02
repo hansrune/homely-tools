@@ -47,9 +47,9 @@ cd homely-tools
 
 ### Initial steps
 
-On initial setup, some prereqs need to be set up
+On initial setup, some prereqs need to be provided:
 
-1. You will need to copy the settings template and update with your own values. For example:
+1. You will need to copy the settings template and modify that with your own values. For example:
 
     ```bash
     sudo cp -v mqtt/defaults-homely2mqtt-template /etc/default/homely2mqtt # copy the template
@@ -69,15 +69,15 @@ On initial setup, some prereqs need to be set up
 
 ### Install or update steps
 
-If you are happy with running the service from `/opt/homely2mqtt` from the `domo` user, you can install or update as follows:
+If you are happy with running the service from `/opt/homely2mqtt` as the user `domo`, you can install or update as follows:
 
 ```bash
 mqtt/install-mqtt.sh
 ```
 
-After some prereq tests, the commands done are echoed - just to make it easier to understand the setup process, and possibly adapt things as needed.
+After some prereq tests, the commands in effect are echoed. The intent is simply to make it easier to understand the setup process, and possibly adapt things as needed.
 
-You will have to break the `journalctl -fu` command being run at the end of the install / update script.
+You will have to break the `journalctl -fu` command being run at the end of this install / update script.
 
 ### Configurtion options
 
