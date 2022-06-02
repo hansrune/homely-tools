@@ -2,7 +2,7 @@
 
 ## Introduction
 
-These Homely alarm tools uses the Homely API to check on status of the alarm system, components and zigbee network - reporting statuses into home automations that use Home Asstant style MQTT with automatic device discovery.
+These Homely alarm services uses the Homely API to check on status of the alarm system, components and zigbee network - reporting statuses into home automations that use Home Asstant style MQTT with automatic device discovery.
 
 The Homely API is available for subscribers from [Homely support](mailto:kundeservice@homely.no) upon request. It is probably not not the final API. The API is currently read-only, i.e. you cannot use these tools to change the state of the Homely alarm system. All API usage included here is based on periodic polls from the API servers provided. They are separate from the endpoints used by the alarm central and the Homely app.
 
@@ -79,7 +79,7 @@ After some prereq tests, the commands in effect are echoed. The intent is simply
 
 You will have to break the `journalctl -fu` command being run at the end of this install / update script.
 
-### Configurtion options
+### Configuration options
 
 Available command line options can be found from `/opt/homely2mqtt/homely2mqtt.py -h`
 
