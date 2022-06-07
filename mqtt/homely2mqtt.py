@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-#
-#
 
 import time, sys, os, json, argparse
 import requests, paho.mqtt.client as mqtt
@@ -84,7 +82,6 @@ argp.add_argument(     '--mqttserver',      default=def_mqtt_server,         hel
 argp.add_argument(     '--mqttport',        default=def_mqtt_port, type=int, help="MQTT server port")
 args=argp.parse_args()
 
-
 h = HomelyAPI(args.debug, args.verbose)
 
 if args.domoticzurl != "":
@@ -118,7 +115,6 @@ else:
 
     print('------------------------- Home state ----------------------------------')
     hs = h.homestatus()
-
 
 if args.debug:
     print('------------------------- Home devices --------------------------------')
