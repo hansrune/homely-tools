@@ -103,7 +103,7 @@ async def message(sid, data):
 
 async def wsconnect(curl, hdrs):
     await sio.connect(curl , headers=hdrs)
-    await sio.wait()
+#    await sio.wait()
 
 curl = f"https://sdk.iotiliti.cloud"
 curl = f"https://sdk.iotiliti.cloud?locationId={myhome['locationId']}&token=Bearer%20{token}"
@@ -112,6 +112,8 @@ hdrs = { 'Authorization' : f"Bearer {token}", 'locationId' : myhome['locationId'
 
 print("Connect to", curl, "using headers", hdrs)
 asyncio.run(wsconnect(curl,hdrs))
+#loop = asyncio.get_event_loop()
+#loop.create_task(wsconnect(curl,hdrs))
 
 sleepfor = 15 
 prev_st  = ""
@@ -120,7 +122,7 @@ while True:
     if args.verbose:
         print("Sleep for",sleepfor,"seconds ... ", end='', flush=True)
 
-    time.sleep(sleepfor)
+    asyncio.sleep(sleepfor)
     sleepfor = args.sleep
     
 # vim:ts=4:sw=4

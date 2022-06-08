@@ -6,6 +6,7 @@
 
 import time, sys, os, json, argparse
 import socketio
+import threading
 #import asyncio
 from HomelyAPI import *
 from MQTT_AD_Devices import *
@@ -103,17 +104,17 @@ def message(sid, data):
     print(data)
     return "OK", 123
 
-curl = f"https://sdk.iotiliti.cloud"
-curl = f"https://sdk.iotiliti.cloud?locationId={myhome['locationId']}&token=Bearer%20{token}"
-hdrs = { 'token' : f"Bearer {token}", 'locationId' : myhome['locationId'] }
-hdrs = { 'Authorization' : f"Bearer {token}", 'locationId' : myhome['locationId'] }
+def siothread():
+    curl = f"https://sdk.iotiliti.cloud"
+    curl = f"https://sdk.iotiliti.cloud?locationId={myhome['locationId']}&token=Bearer%20{token}"
+    hdrs = { 'token' : f"Bearer {token}", 'locationId' : myhome['locationId'] }
+    hdrs = { 'Authorization' : f"Bearer {token}", 'locationId' : myhome['locationId'] }
+    print("Connect to", curl, "using headers", hdrs)
+    sio.connect(curl , headers=hdrs)
+    sio.wait()
 
-print("Connect to", curl, "using headers", hdrs)
-
-#sio.connect(curl , headers=hdrs)
-sio.connect(curl)
-sio.wait()
-
+t = threading.Thread(target=siothread, daemon=True)
+t.start()
 
 sleepfor = 15 
 prev_st  = ""
