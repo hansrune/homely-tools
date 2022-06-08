@@ -87,36 +87,41 @@ if args.save != "":
         json.dump(hs, wfile)
         wfile.close()
 
-if args.debug:
-    sio = socketio.Client(logger=True, engineio_logger=True)
-else:
-    sio = socketio.Client()
+# if args.debug:
+#     sio = socketio.Client(logger=True, engineio_logger=True)
+# else:
+#     sio = socketio.Client()
 
-@sio.event
-def connect():
-    print('websocket: connected to server')
-
-
-@sio.event
-def disconnect():
-    print('websocket: disconnected from server')
-
-@sio.on('event')
-def on_message(data):
-    print('websocket: message: ', data)
+# @sio.event
+# def connect():
+#     print('websocket: connected to server')
 
 
-def siothread():
-    curl = f"https://sdk.iotiliti.cloud"
-    curl = f"https://sdk.iotiliti.cloud?locationId={myhome['locationId']}&token=Bearer%20{token}"
-    hdrs = { 'token' : f"Bearer {token}", 'locationId' : myhome['locationId'] }
-    hdrs = { 'Authorization' : f"Bearer {token}", 'locationId' : myhome['locationId'] }
-    print("Connect to", curl, "using headers", hdrs)
-    sio.connect(curl , headers=hdrs)
-    sio.wait()
+# @sio.event
+# def disconnect():
+#     print('websocket: disconnected from server')
 
-t = threading.Thread(target=siothread, daemon=True)
-t.start()
+# @sio.on('event')
+# def on_message(data):
+#     print('websocket: message: ', data)
+
+
+# def siothread():
+#     curl = f"https://sdk.iotiliti.cloud"
+#     curl = f"https://sdk.iotiliti.cloud?locationId={myhome['locationId']}&token=Bearer%20{token}"
+#     hdrs = { 'token' : f"Bearer {token}", 'locationId' : myhome['locationId'] }
+#     hdrs = { 'Authorization' : f"Bearer {token}", 'locationId' : myhome['locationId'] }
+#     print("Connect to", curl, "using headers", hdrs)
+#     sio.connect(curl , headers=hdrs)
+#     sio.wait()
+
+# t = threading.Thread(target=siothread, daemon=True)
+# t.start()
+
+def siomsg(data):
+    print('websocket callback:', data)
+
+h.startsio(siomsg)
 
 sleepfor = 15 
 prev_st  = ""

@@ -1,7 +1,8 @@
 #
-#
 
 import json, requests, time
+import socketio
+import threading
 
 homely_cloud      = 'sdk.iotiliti.cloud'
 homely_sdk_url    = 'https://' + homely_cloud + '/homely'
@@ -66,6 +67,13 @@ class HomelyAPI:
             self.tokenexp  = epochtime + self.auth['expires_in']
         if self.verbose:
             print("Access token expiry in", self.tokenexp - epochtime - 300, "seconds")
+
+        #
+        # Update also socketio connection data - in case of restart
+        #
+        self.siourl = f"https://{homely_cloud}?locationId={self.locationid}&token=Bearer%20{self.auth['access_token']}"
+        self.siohdrs = { 'Authorization' : f"Bearer {self.auth['access_token']}", 'locationId' : self.locationid }
+
         return self.auth['access_token']
 
     def findhome(self, location = ""):
@@ -87,6 +95,37 @@ class HomelyAPI:
             exit(1)
 
     def homestatus(self):
-        return self.get("Home status", homely_homes + self.locationid, headers={ 'Authorization' : 'Bearer ' + self.auth['access_token'] } )
+        self.homestate = self.get("Home status", homely_homes + self.locationid, headers={ 'Authorization' : 'Bearer ' + self.auth['access_token'] } )
+        return self.homestate
+
+    def sio_calls(self):
+        @self.sio.event
+        def connect():
+            print('websocket: connected to server')
+
+        @self.sio.event
+        def disconnect():
+            print('websocket: disconnected from server')
+
+        @self.sio.on('event')
+        def on_message(data):
+            # print('websocket: message: ', data)
+            self.siomsg(data)
+
+        def siothread():
+            print("Connect to", self.siourl, "using headers", self.siohdrs)
+            self.sio.connect(self.siourl , headers=self.siohdrs)
+            self.sio.wait()
+
+        self.sthread = threading.Thread(target=siothread, daemon=True)
+        self.sthread.start()
+
+    def startsio(self, msg_callback):
+        self.sio = socketio.Client(logger=self.debug, engineio_logger=self.debug)
+        self.siomsg = msg_callback
+        # These are updated also on token refresh ....
+        self.siourl = f"https://{homely_cloud}?locationId={self.locationid}&token=Bearer%20{self.auth['access_token']}"
+        self.siohdrs = { 'Authorization' : f"Bearer {self.auth['access_token']}", 'locationId' : self.locationid }
+        self.sio_calls()
 
 # vim:ts=4:sw=4
