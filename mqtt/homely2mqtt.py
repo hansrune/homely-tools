@@ -137,6 +137,7 @@ if args.save != "":
 
 mq = mqtt.Client(progname)
 mq.connect(args.mqttserver, port=args.mqttport, keepalive=600)
+mq.loop_start()
 hm = MQTT_AD_Config(
     mq, 
     discovery_topic = args.discoveryprefix,
