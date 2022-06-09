@@ -259,6 +259,9 @@ while True:
                     devs_lowbat = "ON"
                 elif state == 'tamper' and dv:
                     devs_tamper = "ON"
+                #
+                # Should not be needed any more , and is a good GUI  indicator of socketio problems
+                #
                 # if state not in ['temperature']:
                 #     continue
                 # unique_name = f"{d['modelName']}-{serial}"
