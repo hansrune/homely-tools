@@ -16,9 +16,9 @@ def on_message(ws, message):
 def alarmstates(state):
     return {
         'DISARMED':          'Disarmed',
-        'ARM_STAY_PENDING':  'Armed stay',
-        'ARM_NIGHT_PENDING': 'Armed night',
-        'ARM_AWAY_PENDING':  'Armed away',
+        'ARM_STAY_PENDING':  'Disarmed',
+        'ARM_NIGHT_PENDING': 'Disarmed',
+        'ARM_AWAY_PENDING':  'Disarmed',
         'ARMED_STAY':        'Armed stay',
         'ARMED_NIGHT':       'Armed night',
         'ARMED_AWAY':        'Armed away'
@@ -27,12 +27,12 @@ def alarmstates(state):
 def alarmdomocodes(state):
     return {
         'DISARMED':          '0',
-        'ARM_STAY_PENDING':  '1',
-        'ARM_NIGHT_PENDING': '1',
+        'ARM_STAY_PENDING':  '0',
+        'ARM_NIGHT_PENDING': '0',
         'ARMED_STAY':        '1',
         'ARMED_NIGHT':       '1',
-        'ARM_AWAY_PENDING':  '2',
-        'ARM_PENDING':       '2',
+        'ARM_AWAY_PENDING':  '0',
+        'ARM_PENDING':       '0',
         'ARMED_AWAY':        '2'
     }.get(state,'')
 
