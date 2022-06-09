@@ -3,6 +3,7 @@
 import json, requests, time
 import socketio
 import threading
+import sys
 
 homely_cloud      = 'sdk.iotiliti.cloud'
 homely_sdk_url    = 'https://' + homely_cloud + '/homely'
@@ -15,14 +16,15 @@ homely_alarmstate = homely_sdk_url + '/alarm/state/'
 
 class HomelyAPI:
     def __init__(self, debug = False, verbose = False ):
-        self.debug      = self.verbose = debug
-        self.verbose    = verbose
-        self.locations  = []
-        self.locationid = 'N/A'
-        self.homestate  = {}
-        self.alarmstate = {}
-        self.auth       = None
-        self.tokenexp   = 0
+        self.debug       = self.verbose = debug
+        self.verbose     = verbose
+        self.locations   = []
+        self.locationid  = 'N/A'
+        self.homestate   = {}
+        self.alarmstate  = {}
+        self.auth        = None
+        self.tokenexp    = 0
+        self.sioexitcode = 0
         return 
 
     def response(self, op, url, response):
@@ -106,6 +108,8 @@ class HomelyAPI:
         @self.sio.event
         def disconnect():
             print('websocket: disconnected from server')
+            # We're exiting - let systemctl take care of restart
+            self.sioexitcode = 2
 
         @self.sio.on('event')
         def on_message(data):
@@ -119,6 +123,10 @@ class HomelyAPI:
 
         self.sthread = threading.Thread(target=siothread, daemon=True)
         self.sthread.start()
+        self.sioexitcode = 0
+
+    def sioexit(self):
+        return self.sioexitcode
 
     def startsio(self, msg_callback):
         self.sio = socketio.Client(logger=self.debug, engineio_logger=self.debug)

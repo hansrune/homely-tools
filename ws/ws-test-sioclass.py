@@ -87,37 +87,6 @@ if args.save != "":
         json.dump(hs, wfile)
         wfile.close()
 
-# if args.debug:
-#     sio = socketio.Client(logger=True, engineio_logger=True)
-# else:
-#     sio = socketio.Client()
-
-# @sio.event
-# def connect():
-#     print('websocket: connected to server')
-
-
-# @sio.event
-# def disconnect():
-#     print('websocket: disconnected from server')
-
-# @sio.on('event')
-# def on_message(data):
-#     print('websocket: message: ', data)
-
-
-# def siothread():
-#     curl = f"https://sdk.iotiliti.cloud"
-#     curl = f"https://sdk.iotiliti.cloud?locationId={myhome['locationId']}&token=Bearer%20{token}"
-#     hdrs = { 'token' : f"Bearer {token}", 'locationId' : myhome['locationId'] }
-#     hdrs = { 'Authorization' : f"Bearer {token}", 'locationId' : myhome['locationId'] }
-#     print("Connect to", curl, "using headers", hdrs)
-#     sio.connect(curl , headers=hdrs)
-#     sio.wait()
-
-# t = threading.Thread(target=siothread, daemon=True)
-# t.start()
-
 def siomsg(data):
     print('websocket callback:', data)
 
@@ -130,9 +99,16 @@ while True:
     if args.verbose:
         print("Sleep for",sleepfor,"seconds ... ", flush=True)
 
-    time.sleep(sleepfor)
-    sleepfor = args.sleep
+    sleepsec = 0
+    while (sleepsec < sleepfor):
+        time.sleep(5)
+        sleepsec = sleepsec + 5
+        rc = h.sioexit()
+        if rc > 0:
+            print("SocketIO initiated exit ... ", flush=True)
+            sys.exit(rc)
 
+    sleepfor = args.sleep
     token = h.tokenrefresh()
     
 # vim:ts=4:sw=4

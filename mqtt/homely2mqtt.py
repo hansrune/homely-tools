@@ -5,13 +5,13 @@ import requests, paho.mqtt.client as mqtt
 from HomelyAPI import *
 from MQTT_AD_Devices import *
 
-progname = os.path.splitext(os.path.basename(sys.argv[0]))[0]
-
+progname  = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 component = {}
+sleepfor  = 15 
+prev_st   = ""
 
 def on_message(ws, message):
 	print(message)
-
 
 def alarmstates(state):
     return {
@@ -172,6 +172,7 @@ devices_lowbat.device_config_publish()
 
 for d in hs['devices']:
     serial = d['serialNumber']
+    devid  = d['id']
     for feature in d['features'].keys():
         ds=d['features'][feature]['states']
         for state in ds.keys():
@@ -180,24 +181,14 @@ for d in hs['devices']:
                 continue
             print(f"Serial {serial} --> {d['modelName']} name {d['name']}-{feature} {state} {dv}")
             unique_name = f"{d['modelName']}-{serial}"
-            component[unique_name] = MQTT_AD_Device(f"{d['name']}-{feature}", unique_name, "temperature")
+            component[devid] = component[unique_name] = MQTT_AD_Device(f"{d['name']}-{feature}", unique_name, "temperature")
             component[unique_name].device_config_publish()
 
-sleepfor = 15 
-prev_st  = ""
 
-while True:
-    if args.verbose:
-        print("Sleep for",sleepfor,"seconds ... ", end='', flush=True)
 
-    time.sleep(sleepfor)
-    sleepfor = args.sleep
-
-    print("Refreshing alarm status ... ")
-    token = h.tokenrefresh()
-    hs    = h.homestatus()
+def alarm_state(ht):
+    global prev_st
     try:
-        ht = hs['alarmState']
         st = alarmstates(ht)
         if st != prev_st:
             prev_st = st
@@ -208,6 +199,47 @@ while True:
                 dr = h.get("Domoticz set security state", args.domoticzurl + '/json.htm?type=command&param=setsecstatus&secstatus=' + ds + '&seccode=' + domoticz_seccode)
     except KeyError:
         pass  
+
+
+#
+# SocketIO message handler - running in separate thread
+#
+def siomsg(smsg):
+    print('websocket callback:', smsg)
+    t = smsg['type']
+    d = smsg['data']
+    if t == 'device-state-changed':
+        devid = d['deviceId']
+        for c in d['changes']:
+            if c['stateName'] == 'temperature':
+                if devid in component:
+                    component[devid].device_json({ "temperature": c['value'] }, timestamp = c['lastUpdated'])
+                else:
+                    print("Unknown temperature device id", devid)
+    elif t == 'alarm-state-changed': 
+        alarm_state(d['state'])
+
+h.startsio(siomsg)
+
+while True:
+    if args.verbose:
+        print("Sleep for",sleepfor,"seconds ... ", end='', flush=True)
+
+    sleepsec = 0
+    while (sleepsec < sleepfor):
+        time.sleep(5)
+        sleepsec = sleepsec + 5
+        siorc = h.sioexit()
+        if siorc > 0:
+            print("SocketIO initiated exit ... ")
+            sys.exit(siorc)
+
+    sleepfor = args.sleep
+
+    print("Refreshing alarm status ... ")
+    token = h.tokenrefresh()
+    hs    = h.homestatus()
+    alarm_state(hs['alarmState'])
 
     devs_online  = "ON"
     devs_lowbat  = "OFF"
@@ -227,10 +259,10 @@ while True:
                     devs_lowbat = "ON"
                 elif state == 'tamper' and dv:
                     devs_tamper = "ON"
-                if state not in ['temperature']:
-                    continue
-                unique_name = f"{d['modelName']}-{serial}"
-                component[unique_name].device_json({ "temperature": dv }, timestamp=ds[state]['lastUpdated'])
+                # if state not in ['temperature']:
+                #     continue
+                # unique_name = f"{d['modelName']}-{serial}"
+                # component[unique_name].device_json({ "temperature": dv }, timestamp=ds[state]['lastUpdated'])
 
     devices_lqi.device_json({ "linkquality": devs_lqi })
     devices_online.device_message(devs_online)
