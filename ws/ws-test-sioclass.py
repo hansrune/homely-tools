@@ -4,19 +4,18 @@
 
 # sudo pip3 install "python-socketio[client]<5.0"
 
-import time, sys, os, json, argparse
+import time, sys, os, json, argparse, logging
 import socketio
 import threading
 #import asyncio
 from HomelyAPI import *
 from MQTT_AD_Devices import *
-import logging
-import sys
 
 progname = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-
+# Set up root logger
+logger = logging.getLogger(progname)
+logging.basicConfig(stream=sys.stdout)
 
 def_user = def_password =  ""
 try:
@@ -38,8 +37,12 @@ argp.add_argument('-d','--debug',           action="store_true",             hel
 argp.add_argument('-v','--verbose',         action="store_true",             help="Verbose")
 args=argp.parse_args()
 
+if args.debug:
+    logger.setLevel(logging.DEBUG)
+elif args.verbose:
+    logger.setLevel(logging.INFO)
 
-h = HomelyAPI(args.debug, args.verbose)
+h = HomelyAPI(args.debug, args.verbose, logger=logger)
 
 if args.load != "":
     with open(args.load, "r") as rfile:
@@ -60,18 +63,16 @@ else:
     token = h.login(args.username, args.password)
     token = h.tokenrefresh()
 
-    print('------------------------- Find home -----------------------------------')
+    print('------------------------- My home ----------------------------------')
     myhome = h.findhome(args.home)
     print(myhome)
 
     print('------------------------- Home state ----------------------------------')
     hs = h.homestatus()
 
-
-if args.debug:
-    print('------------------------- Home devices --------------------------------')
+    logger.debug("------------------------- Device dump -------------------------")
     for i in hs['devices']:
-        print(json.dumps(i))
+        logger.debug(json.dumps(i))
 
 for d in hs['devices']:
     dev_unique_id = d['serialNumber']
@@ -88,7 +89,7 @@ if args.save != "":
         wfile.close()
 
 def siomsg(data):
-    print('websocket callback:', data)
+    logger.info('websocket callback:', data)
 
 h.startsio(siomsg)
 
@@ -97,7 +98,7 @@ prev_st  = ""
 
 while True:
     if args.verbose:
-        print("Sleep for",sleepfor,"seconds ... ", flush=True)
+        logger.info("Sleep for",sleepfor,"seconds ... ", flush=True)
 
     sleepsec = 0
     while (sleepsec < sleepfor):
@@ -105,7 +106,7 @@ while True:
         sleepsec = sleepsec + 5
         rc = h.sioexit()
         if rc > 0:
-            print("SocketIO initiated exit ... ", flush=True)
+            logger.error("SocketIO initiated exit ... ", flush=True)
             sys.exit(rc)
 
     sleepfor = args.sleep

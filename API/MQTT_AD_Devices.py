@@ -1,8 +1,10 @@
 import json
 import yaml
 import time
-
+import logging
 import paho.mqtt.client as mqtt
+
+default_logger = logging.getLogger(__name__)
 
 def devtype_component(dt):
     return {
@@ -52,9 +54,12 @@ def normalized_name(name):
 
 class MQTT_AD_Config(dict):
 
-    def __init__(self, mqtt_client, discovery_topic="homeassistant", state_topic=None, config_file=None, debug = False, verbose = False):
-        self.debug           = debug
-        self.verbose         = verbose
+    def __init__(self, mqtt_client, discovery_topic="homeassistant", state_topic=None, config_file=None, logger=None):
+        if logger is None:
+            self.logger = default_logger
+        else:
+            self.logger = logger
+
         self.discovery_topic = discovery_topic
         if (state_topic is None):
             self.state_topic = discovery_topic
@@ -62,14 +67,14 @@ class MQTT_AD_Config(dict):
             self.state_topic = state_topic
         if self.state_topic == self.discovery_topic:
             self.hass = True
-            print("Home assistant mode")
+            self.logger.info("Home assistant mode")
         else:
             self.hass = False
-            print("Domoticz mode")
+            self.logger.info("Domoticz mode")
         self.mqttclient      = mqtt_client
         self.repeat_timeout  = 1200
         if config_file is not None:
-            print("Reading device connfig from",config_file)
+            self.logger.info("Reading device config from %s",config_file)
             with open(config_yaml_path) as config_file:
                 self.device_config = yaml.safe_load(config_file)
         global mqconf
@@ -118,35 +123,28 @@ class MQTT_AD_Device:
             self.config[a] = attributes[a]
 
     def device_config_publish(self):
-        if mqconf.debug:
-            print(self.friendly_name,"topic",self.discovery_topic,"publish config", self.config)
-
+        mqconf.logger.debug("%s topic %s publish config %s", self.friendly_name,self.discovery_topic,self.config)
         mqconf.mqttclient.publish(self.discovery_topic, payload=json.dumps(self.config), qos=0, retain=True)
     
     def device_message(self, message, timestamp=None):
         if timestamp is not None:
             if timestamp != str(self.last_update):
-                if mqconf.verbose:
-                    print(self.friendly_name,"topic",self.state_topic,"update time",timestamp,"!=",self.last_update,"publish value", message)
+                mqconf.logger.info("%s topic %s update time %s != %s publish value %s", self.friendly_name, self.state_topic, timestamp, self.last_update, message)
                 mqconf.mqttclient.publish(self.state_topic, message)
             else:
-                if mqconf.debug:
-                    print(self.friendly_name,"topic",self.state_topic,"same update timestamp",timestamp)
-
+                mqconf.logger.debug("%s topic %s has identical update timestamp %s",self.friendly_name,self.state_topic,timestamp)
             self.last_update = timestamp
             return True
 
         epoch_time = int(time.time())
         if self.last_state != message or epoch_time > self.last_update + self.send_interval:
-            if mqconf.verbose:
-                print(self.friendly_name,"topic",self.state_topic,"publish value", message)
+            mqconf.logger.info("%s topic %s publish value %s", self.friendly_name,self.state_topic, message)
             mqconf.mqttclient.publish(self.state_topic, message)
             self.last_state = message
             self.last_update= epoch_time
             return True
         else:
-            if mqconf.debug:
-                print(self.friendly_name,"topic",self.state_topic,"same value", message)
+            mqconf.logger.debug("%s topic %s same value %s",self.friendly_name,self.state_topic, message)
             return False
 
     def device_json(self, values, timestamp=None):

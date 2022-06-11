@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-import time, sys, os, json , argparse
+import time, sys, os, json , argparse, logging
 from HomelyAPI import *
 
 progname = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 
-def on_message(ws, message):
-	print(message)
+# Set up root logger
+logger = logging.getLogger(progname)
+logging.basicConfig(stream=sys.stdout)
 
 def alarmdomocodes(state):
     return {
@@ -57,7 +58,12 @@ args=argp.parse_args()
 
 domoticz_stateidx = str(args.stateidx[0])
 
-h = HomelyAPI(args.debug, args.verbose)
+if args.debug:
+    logger.setLevel(logging.DEBUG)
+elif args.verbose:
+    logger.setLevel(logging.INFO)
+
+h = HomelyAPI(logger=logger)
 
 if args.load != "":
     with open(args.load, "r") as rfile:
@@ -78,26 +84,22 @@ else:
     token = h.login(args.username, args.password)
     token = h.tokenrefresh()
 
-
-    print('------------------------- Find home  ----------------------------------')
+    print('------------------------- My home ----------------------------------')
     myhome = h.findhome(args.home)
-    print("My home is:",myhome)
+    print(myhome)
 
-    if args.token: 
-        print('Access token is:')
-        print(token)
-        exit(0)
-
-if args.debug:
-    print('------------------------- Home devices --------------------------------')
+    print('------------------------- Home state ----------------------------------')
     hs = h.homestatus()
-    for i in hs['devices']:
-        print(json.dumps(i))
 
-if args.save != "":
-    with open(args.save, "w") as wfile:
-        json.dump(hs, wfile)
-        wfile.close()
+    if args.save != "":
+        with open(args.save, "w") as wfile:
+            json.dump(hs, wfile)
+            wfile.close()
+
+logger.debug("------------------------- Device map -------------------------")
+for i in hs['devices']:
+    logger.debug(json.dumps(i))
+
 
 print('------------------------- Domoticz settings -------------------------------')
 domoticz_settings = h.get("Domoticz settings", args.domoticzurl + '/json.htm?type=settings')
@@ -137,8 +139,7 @@ while True:
     else:
         print(f"Homely alarm is {ht} and Domoticz switch level is {lvl}, previously {prev_lvl}")
     
-    if args.verbose:
-        print("Sleep for",args.sleep,"seconds")
+    logger.info("Sleep for %d seconds ... ", sleepfor)
 
     time.sleep(args.sleep)
 

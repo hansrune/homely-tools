@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 
-import time, sys, os, json, argparse
-import requests, paho.mqtt.client as mqtt
+import time, sys, os, json, argparse, logging
+import paho.mqtt.client as mqtt
 from HomelyAPI import *
 from MQTT_AD_Devices import *
 
 progname  = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 component = {}
 sleepfor  = 15 
-prev_st   = ""
+alarm_previous_state = "dummy startup state"
 
-def on_message(ws, message):
-	print(message)
+# Set up root logger
+logger = logging.getLogger(progname)
+logging.basicConfig(stream=sys.stdout)
 
 def alarmstates(state):
     return {
@@ -82,13 +83,18 @@ argp.add_argument(     '--mqttserver',      default=def_mqtt_server,         hel
 argp.add_argument(     '--mqttport',        default=def_mqtt_port, type=int, help="MQTT server port")
 args=argp.parse_args()
 
-h = HomelyAPI(args.debug, args.verbose)
+
+if args.debug:
+    logger.setLevel(logging.DEBUG)
+elif args.verbose:
+    logger.setLevel(logging.INFO)
+
+h = HomelyAPI(logger=logger)
 
 if args.domoticzurl != "":
     domoticz_settings = h.get("Domoticz settings", args.domoticzurl + '/json.htm?type=settings')
     domoticz_seccode  = domoticz_settings['SecPassword']
-    if args.verbose:
-        print("Domoticz security setting is",domoticz_seccode)
+    logger.debug("Domoticz security setting is %s",domoticz_seccode)
 
 if args.load != "":
     with open(args.load, "r") as rfile:
@@ -109,17 +115,21 @@ else:
     token = h.login(args.username, args.password)
     token = h.tokenrefresh()
 
-    print('-------------------------')
+    print('------------------------- My home ----------------------------------')
     myhome = h.findhome(args.home)
     print(myhome)
 
     print('------------------------- Home state ----------------------------------')
     hs = h.homestatus()
 
-if args.debug:
-    print('------------------------- Home devices --------------------------------')
-    for i in hs['devices']:
-        print(json.dumps(i))
+    if args.save != "":
+        with open(args.save, "w") as wfile:
+            json.dump(hs, wfile)
+            wfile.close()
+
+logger.debug("------------------------- Device map -------------------------")
+for i in hs['devices']:
+    logger.debug(json.dumps(i))
 
 for d in hs['devices']:
     dev_unique_id = d['serialNumber']
@@ -130,10 +140,7 @@ for d in hs['devices']:
         online = 'online' if d['online'] else "offline"
         print(f"Serial {dev_unique_id} --> {d['modelName']} name {d['name']}-{feature} link state {online} links to {ds['networklinkaddress']['value']} strenght {ds['networklinkstrength']['value']}")
 
-if args.save != "":
-    with open(args.save, "w") as wfile:
-        json.dump(hs, wfile)
-        wfile.close()
+
 
 mq = mqtt.Client(progname)
 mq.connect(args.mqttserver, port=args.mqttport, keepalive=600)
@@ -142,8 +149,7 @@ hm = MQTT_AD_Config(
     mq, 
     discovery_topic = args.discoveryprefix,
     state_topic = args.stateprefix,
-    debug = args.debug,
-    verbose = args.verbose
+    logger = logger
 )
 
 if args.deviceprefix != "":
@@ -187,11 +193,12 @@ for d in hs['devices']:
 
 
 def alarm_state(ht):
-    global prev_st
+    global alarm_previous_state
     try:
         st = alarmstates(ht)
-        if st != prev_st:
-            prev_st = st
+        if st != alarm_previous_state:
+            print(f"Homely alarm state change to {ht} (previous state {alarm_previous_state})")
+            alarm_previous_state = st
             main_alarm.device_message(st)
             if args.domoticzurl != "":
                 ds = alarmdomocodes(ht)
@@ -200,12 +207,11 @@ def alarm_state(ht):
     except KeyError:
         pass  
 
-
 #
 # SocketIO message handler - running in separate thread
 #
 def siomsg(smsg):
-    print('websocket callback:', smsg)
+    logger.info('websocket callback:', smsg)
     t = smsg['type']
     d = smsg['data']
     if t == 'device-state-changed':
@@ -222,16 +228,18 @@ def siomsg(smsg):
 h.startsio(siomsg)
 
 while True:
-    if args.verbose:
-        print("Sleep for",sleepfor,"seconds ... ", end='', flush=True)
+    logger.info("Sleep for %d seconds ... ", sleepfor)
 
     sleepsec = 0
+    #
+    # Chop it into 5 sec intervals to check fock socketio disconnects
+    #
     while (sleepsec < sleepfor):
         time.sleep(5)
         sleepsec = sleepsec + 5
         siorc = h.sioexit()
         if siorc > 0:
-            print("SocketIO initiated exit ... ")
+            logger.error("SocketIO initiated exit ... ")
             sys.exit(siorc)
 
     sleepfor = args.sleep
@@ -260,7 +268,7 @@ while True:
                 elif state == 'tamper' and dv:
                     devs_tamper = "ON"
                 #
-                # Should not be needed any more , and is a good GUI  indicator of socketio problems
+                # Should not be needed any more , and is a good GUI indicator of socketio problems
                 #
                 # if state not in ['temperature']:
                 #     continue
