@@ -291,11 +291,12 @@ while True:
         for feature in d['features'].keys():
             ds=d['features'][feature]['states']
             for state in ds.keys():
+                parent_name = f"{modelname}_{serial}"
                 dv = ds[state]['value']
                 dt = ds[state]['lastUpdated']
                 if dv is None or dt is None:
+                    logger.warning("Device %s state %s has missing value or timestamp", parent_name, state)
                     continue
-                parent_name = f"{modelname}_{serial}"
                 if state == 'networklinkstrength' and int(dv) < devs_lqi:
                     devs_lqi = int(dv)
                 elif state == 'low' and dv:
