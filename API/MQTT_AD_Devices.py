@@ -103,7 +103,8 @@ class MQTT_AD_Device:
         self.discovery_topic = f"{mqconf.discovery_topic}/{device_component}/{parent_name}_{sub_device}/config"
         self.send_interval   = 1200
         self.last_update     = 0
-        self.last_state      = ''
+        self.last_timestamp  = 'init time'
+        self.last_state      = 'init state'
         self.config = { 
             "name": self.friendly_name,
             "unique_id": f"{parent_name}_{sub_device}",
@@ -137,16 +138,17 @@ class MQTT_AD_Device:
         mqconf.mqttclient.publish(self.discovery_topic, payload=json.dumps(self.config), qos=0, retain=True)
     
     def device_message(self, message, timestamp=None):
+        epoch_time = int(time.time())
         if timestamp is not None:
             if timestamp != str(self.last_update):
-                mqconf.logger.info("%s topic %s update time %s != %s publish value %s", self.friendly_name, self.state_topic, timestamp, self.last_update, message)
+                mqconf.logger.info("%s topic %s update time %s != %s publish value %s", self.friendly_name, self.state_topic, timestamp, self.last_timestamp, message)
                 mqconf.mqttclient.publish(self.state_topic, message)
+                self.last_update= epoch_time
+                self.last_timestamp = timestamp
             else:
                 mqconf.logger.debug("%s topic %s has identical update timestamp %s",self.friendly_name,self.state_topic,timestamp)
-            self.last_update = timestamp
             return True
 
-        epoch_time = int(time.time())
         if self.last_state != message or epoch_time > self.last_update + self.send_interval:
             mqconf.logger.info("%s topic %s publish value %s", self.friendly_name,self.state_topic, message)
             mqconf.mqttclient.publish(self.state_topic, message)
