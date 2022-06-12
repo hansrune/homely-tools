@@ -295,31 +295,33 @@ while True:
                 dv = ds[state]['value']
                 dt = ds[state]['lastUpdated']
                 if dv is None or dt is None:
-                    logger.warning("Device %s state %s has missing value or timestamp", parent_name, state)
+                    # logger.debug("Device %s state %s has missing value or timestamp", parent_name, state)
                     continue
-                if state == 'networklinkstrength' and int(dv) < devs_lqi:
+                #
+                # Should not be needed any more , and is a good GUI indicator of socketio problems
+                # Still handy to include as device creation may not happen until a value is sent
+                #
+                if feature == 'temperature':
+                    sub_device="temp"
+                    component[f"{parent_name}_{sub_device}"].device_json({ "temperature": dv }, timestamp=dt)
+                elif state == 'alarm':
+                    onoff = 'ON' if dv else 'OFF'
+                    if modelname == "Motion Sensor Mini":
+                        sub_device="motion"
+                        # print(f"BUG: {parent_name}_{sub_device}", onoff, dt)
+                        component[f"{parent_name}_{sub_device}"].device_message(onoff, timestamp=dt)
+                    elif modelname == "Window Sensor":
+                        # Used mostly for doors - even if model name is Window Sensor
+                        sub_device="door"
+                        component[f"{parent_name}_{sub_device}"].device_message(onoff, timestamp=dt)
+                elif state == 'networklinkstrength' and int(dv) < devs_lqi:
                     devs_lqi = int(dv)
                 elif state == 'low' and dv:
                     devs_lowbat = "ON"
                 elif state == 'tamper' and dv:
                     devs_tamper = "ON"
-                #
-                # Should not be needed any more , and is a good GUI indicator of socketio problems
-                # Still handy to include as device creation may not happen until a value is sent
-                #
-                elif feature == 'temperature':
-                    sub_device="temp"
-                    component[f"{parent_name}_{sub_device}"].device_json({ "temperature": dv }, timestamp=dt)
-                elif modelname == "Motion Sensor Mini" and state == 'alarm':
-                    sub_device="motion"
-                    onoff = 'ON' if dv else 'OFF'
-                    # print(f"BUG: {parent_name}_{sub_device}", onoff, dt)
-                    component[f"{parent_name}_{sub_device}"].device_message(onoff, timestamp=dt)
-                elif modelname == "Window Sensor" and state == 'alarm':
-                    # Used mostly for doors - even if model name is Window Sensor
-                    sub_device="door"
-                    onoff = 'ON' if dv else 'OFF'
-                    component[f"{parent_name}_{sub_device}"].device_message(onoff, timestamp=dt)
+
+
 
     devices_lqi.device_json({ "linkquality": devs_lqi })
     devices_online.device_message(devs_online)
