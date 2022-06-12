@@ -13,6 +13,9 @@ def devtype_component(dt):
         'tamper':           'binary_sensor',
         'connectivity':     'binary_sensor',
         'battery':          'binary_sensor',
+        'motion':           'binary_sensor',
+        'door':             'binary_sensor',
+        'window':           'binary_sensor',
         'linkpercent':      'sensor',
         'temperature':      'sensor',
         'dummy':            None
@@ -29,6 +32,8 @@ def devtype_icons(dt):
     return {
         'selector':         'mdi:alarm-light',
         'linkpercent':      'mdi:signal',
+        'door':             'mdi:door',
+        'motion':           'mdi:motion-sensor',
         'dummy':            None
     }.get(dt, None)
 
@@ -84,37 +89,38 @@ class MQTT_AD_Config(dict):
 
 class MQTT_AD_Device:
 
-    def __init__(self, friendly_name, unique_name, device_type):
+    def __init__(self, friendly_name, parent_name, sub_device):
         self.friendly_name   = normalized_name(friendly_name)
-        unique_name          = normalized_name(unique_name)
-        device_component     = devtype_component(device_type)
-        device_topic         = f"{mqconf.state_topic}/{unique_name}_{device_type}"
+        parent_name          = normalized_name(parent_name)
+        device_component     = devtype_component(sub_device)
+        device_topic         = f"{mqconf.state_topic}/{parent_name}_{sub_device}"
         self.state_topic     = f"{device_topic}/state"
-        self.discovery_topic = f"{mqconf.discovery_topic}/{device_component}/{unique_name}/{device_type}/config"
+        #self.discovery_topic = f"{mqconf.discovery_topic}/{device_component}/{parent_name}/{sub_device}/config"
+        self.discovery_topic = f"{mqconf.discovery_topic}/{device_component}/{parent_name}_{sub_device}/config"
         self.send_interval   = 1200
         self.last_update     = 0
         self.last_state      = ''
         self.config = { 
             "name": self.friendly_name,
-            "unique_id": unique_name,
+            "unique_id": f"{parent_name}_{sub_device}",
             "~": device_topic,
             "stat_t" : "~/state",
             "cmd_t" : "~/set"
         }
 
-        device_class = devtype_class(device_type)
+        device_class = devtype_class(sub_device)
         if device_class is not None:
             self.config['device_class'] = device_class
 
-        icon = devtype_icons(device_type)
+        icon = devtype_icons(sub_device)
         if icon is not None:
             self.config['icon'] = icon
 
-        unit = devtype_units(device_type)
+        unit = devtype_units(sub_device)
         if unit is not None:
             self.config['unit_of_measurement'] = unit
 
-        value_template = devtype_value_template(device_type)
+        value_template = devtype_value_template(sub_device)
         if value_template is not None:
             self.config['value_template'] = value_template
     

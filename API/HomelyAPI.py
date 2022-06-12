@@ -28,15 +28,10 @@ class HomelyAPI:
             self.logger = default_logger
         else:
             self.logger = logger
-
         return 
 
     def response(self, op, url, response):
-        self.logger.debug("--------------------- %s ---------------------", op)
-        self.logger.debug("URL %s",url)
-        self.logger.debug("Status code %d",response.status_code)
-        self.logger.debug("Response text:\n%s",response.text)
-        self.logger.debug("------------------------------------------------------")
+        self.logger.debug("%s request - URL %s --> status %d, response:\n%s",op,url,response.status_code,response.text)
         if response.status_code not in [ 200, 201 ]:
             self.logger.error("Error code %ss\n%s",response.status_code, response.text)
             exit(2)

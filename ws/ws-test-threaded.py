@@ -15,8 +15,9 @@ import sys
 
 progname = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-
+# Set up root logger
+logger = logging.getLogger(progname)
+logging.basicConfig(stream=sys.stdout)
 
 def_user = def_password =  ""
 try:
@@ -38,8 +39,12 @@ argp.add_argument('-d','--debug',           action="store_true",             hel
 argp.add_argument('-v','--verbose',         action="store_true",             help="Verbose")
 args=argp.parse_args()
 
+if args.debug:
+    logger.setLevel(logging.DEBUG)
+elif args.verbose:
+    logger.setLevel(logging.INFO)
 
-h = HomelyAPI(args.debug, args.verbose)
+h = HomelyAPI(logger)
 
 if args.load != "":
     with open(args.load, "r") as rfile:

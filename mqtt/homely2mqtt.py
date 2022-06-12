@@ -127,10 +127,11 @@ else:
             json.dump(hs, wfile)
             wfile.close()
 
-logger.debug("------------------------- Device map -------------------------")
+logger.debug("------------------------- Device dump -------------------------")
 for i in hs['devices']:
     logger.debug(json.dumps(i))
 
+print("------------------------- Device table -------------------------")
 for d in hs['devices']:
     dev_unique_id = d['serialNumber']
     for feature in d['features'].keys():
@@ -177,19 +178,34 @@ devices_lowbat = MQTT_AD_Device("Homely device low battery", f"{devprefix}.batte
 devices_lowbat.device_config_publish()
 
 for d in hs['devices']:
-    serial = d['serialNumber']
-    devid  = d['id']
+    serial    = d['serialNumber']
+    devid     = d['id']
+    devname   = d['name']
+    modelname = d['modelName']
     for feature in d['features'].keys():
         ds=d['features'][feature]['states']
         for state in ds.keys():
-            dv = ds[state]['value']
-            if state not in ['temperature']:
+            if state not in ['alarm','temperature']:
                 continue
-            print(f"Serial {serial} --> {d['modelName']} name {d['name']}-{feature} {state} {dv}")
-            unique_name = f"{d['modelName']}-{serial}"
-            component[devid] = component[unique_name] = MQTT_AD_Device(f"{d['name']}-{feature}", unique_name, "temperature")
-            component[unique_name].device_config_publish()
-
+            dv = ds[state]['value']
+            ds = f"Serial {serial} --> {modelname} name {devname}-{feature} {state} {dv}"
+            parent_name = f"{modelname}_{serial}"
+            print(f"DEBUG: {ds} --> {dv}")
+            if feature == 'temperature':
+                print(ds)
+                sub_device="temp"
+                component[f"{devid}_{sub_device}"] = component[f"{parent_name}_{sub_device}"] = MQTT_AD_Device(f"{devname}-{sub_device}", parent_name, sub_device)
+                component[f"{parent_name}_{sub_device}"].device_config_publish()
+            elif modelname == "Motion Sensor Mini" and feature == 'alarm':
+                print(ds)
+                sub_device="motion"
+                component[f"{devid}_{sub_device}"] = component[f"{parent_name}_{sub_device}"] = MQTT_AD_Device(f"{devname}-{sub_device}", parent_name, sub_device)
+                component[f"{parent_name}_{sub_device}"].device_config_publish()
+            elif modelname == "Window Sensor" and feature == 'alarm':
+                print(ds)
+                sub_device="door"
+                component[f"{devid}_{sub_device}"] = component[f"{parent_name}_{sub_device}"] = MQTT_AD_Device(f"{devname}-{sub_device}", parent_name, sub_device)
+                component[f"{parent_name}_{sub_device}"].device_config_publish()
 
 
 def alarm_state(ht):
@@ -218,10 +234,21 @@ def siomsg(smsg):
         devid = d['deviceId']
         for c in d['changes']:
             if c['stateName'] == 'temperature':
-                if devid in component:
-                    component[devid].device_json({ "temperature": c['value'] }, timestamp = c['lastUpdated'])
+                id_device=f"{devid}_temp"
+                if id_device in component:
+                    component[id_device].device_json({ "temperature": c['value'] }, timestamp = c['lastUpdated'])
                 else:
-                    print("Unknown temperature device id", devid)
+                    logger.warning("Unknown temperature device id", devid)
+            elif c['stateName'] == 'alarm':
+                onoff = 'ON' if c['value'] else 'OFF'
+                # 
+                # Only motion sensors and window/door sensors supported
+                #
+                for sub_device in ['motion', 'door']:
+                    id_device=f"{devid}_{sub_device}"
+                    if id_device in component:
+                        component[id_device].device_message(onoff, timestamp = c['lastUpdated'])
+                        break
     elif t == 'alarm-state-changed': 
         alarm_state(d['state'])
 
@@ -255,12 +282,19 @@ while True:
     devs_lqi     = 100
     for d in hs['devices']:
         serial = d['serialNumber']
+        devid     = d['id']
+        devname   = d['name']
+        modelname = d['modelName']
+
         if not d['online']:
             devs_online = "OFF"
         for feature in d['features'].keys():
             ds=d['features'][feature]['states']
             for state in ds.keys():
+                if state not in ['alarm','temperature']:
+                    continue
                 dv = ds[state]['value']
+                parent_name = f"{modelname}_{serial}"
                 if state == 'networklinkstrength' and int(dv) < devs_lqi:
                     devs_lqi = int(dv)
                 elif state == 'low' and dv:
@@ -269,11 +303,21 @@ while True:
                     devs_tamper = "ON"
                 #
                 # Should not be needed any more , and is a good GUI indicator of socketio problems
+                # Still handy to include as device creation may not happen until a value is sent
                 #
-                # if state not in ['temperature']:
-                #     continue
-                # unique_name = f"{d['modelName']}-{serial}"
-                # component[unique_name].device_json({ "temperature": dv }, timestamp=ds[state]['lastUpdated'])
+                elif feature == 'temperature':
+                    sub_device="temp"
+                    component[f"{parent_name}_{sub_device}"].device_json({ "temperature": dv }, timestamp=ds[state]['lastUpdated'])
+                elif modelname == "Motion Sensor Mini" and feature == 'alarm':
+                    sub_device="motion"
+                    onoff = 'ON' if dv else 'OFF'
+                    component[f"{parent_name}_{sub_device}"].device_message(onoff, timestamp=ds[state]['lastUpdated'])
+                elif modelname == "Window Sensor" and feature == 'alarm':
+                    # Used mostly for doors - even if model name is Window Sensor
+                    sub_device="door"
+                    onoff = 'ON' if dv else 'OFF'
+                    component[f"{parent_name}_{sub_device}"].device_message(onoff, timestamp=ds[state]['lastUpdated'])
+
 
     devices_lqi.device_json({ "linkquality": devs_lqi })
     devices_online.device_message(devs_online)

@@ -42,7 +42,7 @@ if args.debug:
 elif args.verbose:
     logger.setLevel(logging.INFO)
 
-h = HomelyAPI(args.debug, args.verbose, logger=logger)
+h = HomelyAPI(logger=logger)
 
 if args.load != "":
     with open(args.load, "r") as rfile:
