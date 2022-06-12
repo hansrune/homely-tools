@@ -18,12 +18,14 @@ def devtype_component(dt):
         'window':           'binary_sensor',
         'linkpercent':      'sensor',
         'temperature':      'sensor',
+        'temp':             'sensor',
         'dummy':            None
     }.get(dt, dt)
 
 def devtype_class(dt):
     return {
         'selector':         'select',
+        'temp':             'temperature',
         'linkpercent':      None,
         'dummy':            None
     }.get(dt, dt)
@@ -41,6 +43,7 @@ def devtype_units(dt):
     return {
         'linkpercent':      '%',
         'temperature':      '°C',
+        'temp':             '°C',
         'dummy':            None
     }.get(dt, None)
 
@@ -48,6 +51,7 @@ def devtype_value_template(dt):
     return {
         'linkpercent':      '{{ value_json.linkquality }}',
         'temperature':      '{{ value_json.temperature }}',
+        'temp':             '{{ value_json.temperature }}',
         'dummy':            None
     }.get(dt, None)
 
