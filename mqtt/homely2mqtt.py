@@ -190,18 +190,18 @@ for d in hs['devices']:
             dv = ds[state]['value']
             ds = f"Serial {serial} --> {modelname} name {devname}-{feature} {state} {dv}"
             parent_name = f"{modelname}_{serial}"
-            print(f"DEBUG: {ds} --> {dv}")
+            # print(f"DEBUG: {ds} --> {dv}")
             if feature == 'temperature':
                 print(ds)
                 sub_device="temp"
                 component[f"{devid}_{sub_device}"] = component[f"{parent_name}_{sub_device}"] = MQTT_AD_Device(f"{devname}-{sub_device}", parent_name, sub_device)
                 component[f"{parent_name}_{sub_device}"].device_config_publish()
-            elif modelname == "Motion Sensor Mini" and feature == 'alarm':
+            elif modelname == "Motion Sensor Mini" and state == 'alarm':
                 print(ds)
                 sub_device="motion"
                 component[f"{devid}_{sub_device}"] = component[f"{parent_name}_{sub_device}"] = MQTT_AD_Device(f"{devname}-{sub_device}", parent_name, sub_device)
                 component[f"{parent_name}_{sub_device}"].device_config_publish()
-            elif modelname == "Window Sensor" and feature == 'alarm':
+            elif modelname == "Window Sensor" and state == 'alarm':
                 print(ds)
                 sub_device="door"
                 component[f"{devid}_{sub_device}"] = component[f"{parent_name}_{sub_device}"] = MQTT_AD_Device(f"{devname}-{sub_device}", parent_name, sub_device)
@@ -292,6 +292,9 @@ while True:
             ds=d['features'][feature]['states']
             for state in ds.keys():
                 dv = ds[state]['value']
+                dt = ds[state]['lastUpdated']
+                if dv is None or dt is None:
+                    continue
                 parent_name = f"{modelname}_{serial}"
                 if state == 'networklinkstrength' and int(dv) < devs_lqi:
                     devs_lqi = int(dv)
@@ -305,16 +308,17 @@ while True:
                 #
                 elif feature == 'temperature':
                     sub_device="temp"
-                    component[f"{parent_name}_{sub_device}"].device_json({ "temperature": dv }, timestamp=ds[state]['lastUpdated'])
-                elif modelname == "Motion Sensor Mini" and feature == 'alarm':
+                    component[f"{parent_name}_{sub_device}"].device_json({ "temperature": dv }, timestamp=dt)
+                elif modelname == "Motion Sensor Mini" and state == 'alarm':
                     sub_device="motion"
                     onoff = 'ON' if dv else 'OFF'
-                    component[f"{parent_name}_{sub_device}"].device_message(onoff, timestamp=ds[state]['lastUpdated'])
-                elif modelname == "Window Sensor" and feature == 'alarm':
+                    # print(f"BUG: {parent_name}_{sub_device}", onoff, dt)
+                    component[f"{parent_name}_{sub_device}"].device_message(onoff, timestamp=dt)
+                elif modelname == "Window Sensor" and state == 'alarm':
                     # Used mostly for doors - even if model name is Window Sensor
                     sub_device="door"
                     onoff = 'ON' if dv else 'OFF'
-                    component[f"{parent_name}_{sub_device}"].device_message(onoff, timestamp=ds[state]['lastUpdated'])
+                    component[f"{parent_name}_{sub_device}"].device_message(onoff, timestamp=dt)
 
     devices_lqi.device_json({ "linkquality": devs_lqi })
     devices_online.device_message(devs_online)
