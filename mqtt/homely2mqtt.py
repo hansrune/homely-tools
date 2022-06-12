@@ -291,8 +291,6 @@ while True:
         for feature in d['features'].keys():
             ds=d['features'][feature]['states']
             for state in ds.keys():
-                if state not in ['alarm','temperature']:
-                    continue
                 dv = ds[state]['value']
                 parent_name = f"{modelname}_{serial}"
                 if state == 'networklinkstrength' and int(dv) < devs_lqi:
@@ -317,7 +315,6 @@ while True:
                     sub_device="door"
                     onoff = 'ON' if dv else 'OFF'
                     component[f"{parent_name}_{sub_device}"].device_message(onoff, timestamp=ds[state]['lastUpdated'])
-
 
     devices_lqi.device_json({ "linkquality": devs_lqi })
     devices_online.device_message(devs_online)
