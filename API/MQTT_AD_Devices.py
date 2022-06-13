@@ -140,7 +140,7 @@ class MQTT_AD_Device:
     def device_message(self, message, timestamp=None):
         epoch_time = int(time.time())
         if timestamp is not None:
-            if timestamp != str(self.last_update):
+            if timestamp != self.last_timestamp:
                 mqconf.logger.info("%s topic %s update time %s != %s publish value %s", self.friendly_name, self.state_topic, timestamp, self.last_timestamp, message)
                 mqconf.mqttclient.publish(self.state_topic, message)
                 self.last_update= epoch_time
