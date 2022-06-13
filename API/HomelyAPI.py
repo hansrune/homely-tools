@@ -6,7 +6,12 @@ import threading
 
 default_logger = logging.getLogger(__name__)
 
+# 3.68.249.79     sdk.iotiliti.cloud
+# 18.158.205.122  sdk.iotiliti.cloud
+# 3.123.159.66    sdk.iotiliti.cloud
+
 homely_cloud      = 'sdk.iotiliti.cloud'
+homely_wsio       = homely_cloud
 homely_sdk_url    = 'https://' + homely_cloud + '/homely'
 homely_login_url  = homely_sdk_url + '/oauth/token'
 homely_reauth_url = homely_sdk_url + '/oauth/refresh-token'
@@ -69,7 +74,7 @@ class HomelyAPI:
         #
         # Update also socketio connection data - in case of restart
         #
-        self.siourl = f"https://{homely_cloud}?locationId={self.locationid}&token=Bearer%20{self.auth['access_token']}"
+        self.siourl = f"https://{homely_wsio}?locationId={self.locationid}&token=Bearer%20{self.auth['access_token']}"
         self.siohdrs = { 'Authorization' : f"Bearer {self.auth['access_token']}", 'locationId' : self.locationid }
 
         return self.auth['access_token']
@@ -127,7 +132,7 @@ class HomelyAPI:
         self.sio = socketio.Client(logger=self.logger, engineio_logger=self.logger)
         self.siomsg = msg_callback
         # These are updated also on token refresh ....
-        self.siourl = f"https://{homely_cloud}?locationId={self.locationid}&token=Bearer%20{self.auth['access_token']}"
+        self.siourl = f"https://{homely_wsio}?locationId={self.locationid}&token=Bearer%20{self.auth['access_token']}"
         self.siohdrs = { 'Authorization' : f"Bearer {self.auth['access_token']}", 'locationId' : self.locationid }
         self.sio_calls()
 
