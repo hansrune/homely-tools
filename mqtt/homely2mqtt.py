@@ -20,6 +20,7 @@ def alarmstates(state):
         'ARM_STAY_PENDING':  'Disarmed',
         'ARM_NIGHT_PENDING': 'Disarmed',
         'ARM_AWAY_PENDING':  'Disarmed',
+        'ARM_PENDING':       'Disarmed',
         'ARMED_STAY':        'Armed stay',
         'ARMED_NIGHT':       'Armed night',
         'ARMED_AWAY':        'Armed away'
