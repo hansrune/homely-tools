@@ -1,9 +1,17 @@
 #
-#
 
-import json, requests, time
+import json, requests, time, sys, logging
+import socketio
+import threading
+
+default_logger = logging.getLogger(__name__)
+
+# 3.68.249.79     sdk.iotiliti.cloud
+# 18.158.205.122  sdk.iotiliti.cloud
+# 3.123.159.66    sdk.iotiliti.cloud
 
 homely_cloud      = 'sdk.iotiliti.cloud'
+homely_wsio       = homely_cloud
 homely_sdk_url    = 'https://' + homely_cloud + '/homely'
 homely_login_url  = homely_sdk_url + '/oauth/token'
 homely_reauth_url = homely_sdk_url + '/oauth/refresh-token'
@@ -13,27 +21,24 @@ homely_alarmstate = homely_sdk_url + '/alarm/state/'
 
 
 class HomelyAPI:
-    def __init__(self, debug = False, verbose = False ):
-        self.debug      = self.verbose = debug
-        self.verbose    = verbose
-        self.locations  = []
-        self.locationid = 'N/A'
-        self.homestate  = {}
-        self.alarmstate = {}
-        self.auth       = None
-        self.tokenexp   = 0
+    def __init__(self, logger = None ):
+        self.locations   = []
+        self.locationid  = 'N/A'
+        self.homestate   = {}
+        self.alarmstate  = {}
+        self.auth        = None
+        self.tokenexp    = 0
+        self.sioexitcode = 0
+        if logger is None:
+            self.logger = default_logger
+        else:
+            self.logger = logger
         return 
 
     def response(self, op, url, response):
-        if self.debug:
-            print("---------------------", op, "---------------------")
-            print("URL",url)
-            print("Status code",response.status_code)
-            print("Response text:")
-            print(response.text)
-            print("------------------------------------------------------")
+        self.logger.debug("%s request - URL %s --> status %d, response:\n%s",op,url,response.status_code,response.text)
         if response.status_code not in [ 200, 201 ]:
-            print("Error code",response.status_code, response.text)
+            self.logger.error("Error code %ss\n%s",response.status_code, response.text)
             exit(2)
         return json.loads(response.text)
 
@@ -64,8 +69,14 @@ class HomelyAPI:
         if epochtime + 300 >= self.tokenexp:
             self.auth      = self.post("Refresh access", homely_reauth_url, json={ 'refresh_token' : self.auth['refresh_token'] })
             self.tokenexp  = epochtime + self.auth['expires_in']
-        if self.verbose:
-            print("Access token expiry in", self.tokenexp - epochtime - 300, "seconds")
+        self.logger.info("Access token expiry in %d seconds", self.tokenexp - epochtime - 300)
+
+        #
+        # Update also socketio connection data - in case of restart
+        #
+        self.siourl = f"https://{homely_wsio}?locationId={self.locationid}&token=Bearer%20{self.auth['access_token']}"
+        self.siohdrs = { 'Authorization' : f"Bearer {self.auth['access_token']}", 'locationId' : self.locationid }
+
         return self.auth['access_token']
 
     def findhome(self, location = ""):
@@ -83,10 +94,46 @@ class HomelyAPI:
             self.locationid = locobj['locationId']
             return locobj
         else:
-            print("Location name ", location, " not found")
+            self.logger.error("Location name %s not found", location)
             exit(1)
 
     def homestatus(self):
-        return self.get("Home status", homely_homes + self.locationid, headers={ 'Authorization' : 'Bearer ' + self.auth['access_token'] } )
+        self.homestate = self.get("Home status", homely_homes + self.locationid, headers={ 'Authorization' : 'Bearer ' + self.auth['access_token'] } )
+        return self.homestate
+
+    def sio_calls(self):
+        @self.sio.event
+        def connect():
+            self.logger.info('websocket: connected to server')
+
+        @self.sio.event
+        def disconnect():
+            self.logger.error('websocket: disconnected from server')
+            # We're exiting - let systemctl take care of restart
+            self.sioexitcode = 2
+
+        @self.sio.on('event')
+        def on_message(data):
+            self.siomsg(data)
+
+        def siothread():
+            self.logger.debug("Connect to %s using headers %s", self.siourl, self.siohdrs)
+            self.sio.connect(self.siourl , headers=self.siohdrs)
+            self.sio.wait()
+
+        self.sthread = threading.Thread(target=siothread, daemon=True)
+        self.sthread.start()
+        self.sioexitcode = 0
+
+    def sioexit(self):
+        return self.sioexitcode
+
+    def startsio(self, msg_callback):
+        self.sio = socketio.Client(logger=self.logger, engineio_logger=self.logger)
+        self.siomsg = msg_callback
+        # These are updated also on token refresh ....
+        self.siourl = f"https://{homely_wsio}?locationId={self.locationid}&token=Bearer%20{self.auth['access_token']}"
+        self.siohdrs = { 'Authorization' : f"Bearer {self.auth['access_token']}", 'locationId' : self.locationid }
+        self.sio_calls()
 
 # vim:ts=4:sw=4

@@ -1,7 +1,7 @@
 #!/bin/bash
 PROG=$( basename $0 .sh )
 SERVICE="homely2mqtt"
-REQUIREMENTS="requests paho.mqtt.client:pahoo-mqtt"
+REQUIREMENTS="requests paho.mqtt.client:pahoo-mqtt socketio:python-socketio[client]<5.0"
 
 SRCDIR=$( dirname $0 )
 DESTDIR="/opt/${SERVICE}/"
@@ -18,7 +18,7 @@ fi
 for R in ${REQUIREMENTS}
 do 
    python3 -c "import ${R%:*}" >& /dev/null && continue
-   echo "${PROG}: python3 cannot import ${R%:*}. Please install with \"pip3 install ${R#*:}\" or similar" >&2
+   echo "${PROG}: python3 cannot import ${R%:*}. Please install with \"pip3 install '${R#*:}'\" or similar" >&2
    exit 1
 done
 

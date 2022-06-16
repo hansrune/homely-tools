@@ -18,7 +18,7 @@ fi
 for R in ${REQUIREMENTS}
 do 
    python3 -c "import ${R%:*}" >& /dev/null && continue
-   echo "${PROG}: python3 cannot import ${R%:*}. Please install with \"pip3 install ${R#*:}\" or similar" >&2
+   echo "${PROG}: python3 cannot import ${R%:*}. Please install with \"pip3 install '${R#*:}'\" or similar" >&2
    exit 1
 done
 

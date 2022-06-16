@@ -1,26 +1,25 @@
 #!/usr/bin/env python3
-#
-#
 
-import time, sys, os, json, argparse
-import requests, paho.mqtt.client as mqtt
+import time, sys, os, json, argparse, logging
+import paho.mqtt.client as mqtt
 from HomelyAPI import *
 from MQTT_AD_Devices import *
 
-progname = os.path.splitext(os.path.basename(sys.argv[0]))[0]
-
+progname  = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 component = {}
+sleepfor  = 15 
+alarm_previous_state = "dummy startup state"
 
-def on_message(ws, message):
-	print(message)
-
+# Set up root logger
+logger = logging.getLogger(progname)
+logging.basicConfig(stream=sys.stdout)
 
 def alarmstates(state):
     return {
         'DISARMED':          'Disarmed',
-        'ARM_STAY_PENDING':  'Armed stay',
-        'ARM_NIGHT_PENDING': 'Armed night',
-        'ARM_AWAY_PENDING':  'Armed away',
+        'ARM_STAY_PENDING':  'Disarmed',
+        'ARM_NIGHT_PENDING': 'Disarmed',
+        'ARM_AWAY_PENDING':  'Disarmed',
         'ARMED_STAY':        'Armed stay',
         'ARMED_NIGHT':       'Armed night',
         'ARMED_AWAY':        'Armed away'
@@ -29,12 +28,12 @@ def alarmstates(state):
 def alarmdomocodes(state):
     return {
         'DISARMED':          '0',
-        'ARM_STAY_PENDING':  '1',
-        'ARM_NIGHT_PENDING': '1',
+        'ARM_STAY_PENDING':  '0',
+        'ARM_NIGHT_PENDING': '0',
         'ARMED_STAY':        '1',
         'ARMED_NIGHT':       '1',
-        'ARM_AWAY_PENDING':  '2',
-        'ARM_PENDING':       '2',
+        'ARM_AWAY_PENDING':  '0',
+        'ARM_PENDING':       '0',
         'ARMED_AWAY':        '2'
     }.get(state,'')
 
@@ -85,13 +84,17 @@ argp.add_argument(     '--mqttport',        default=def_mqtt_port, type=int, hel
 args=argp.parse_args()
 
 
-h = HomelyAPI(args.debug, args.verbose)
+if args.debug:
+    logger.setLevel(logging.DEBUG)
+elif args.verbose:
+    logger.setLevel(logging.INFO)
+
+h = HomelyAPI(logger=logger)
 
 if args.domoticzurl != "":
     domoticz_settings = h.get("Domoticz settings", args.domoticzurl + '/json.htm?type=settings')
     domoticz_seccode  = domoticz_settings['SecPassword']
-    if args.verbose:
-        print("Domoticz security setting is",domoticz_seccode)
+    logger.debug("Domoticz security setting is %s",domoticz_seccode)
 
 if args.load != "":
     with open(args.load, "r") as rfile:
@@ -112,19 +115,23 @@ else:
     token = h.login(args.username, args.password)
     token = h.tokenrefresh()
 
-    print('-------------------------')
+    print('------------------------- My home ----------------------------------')
     myhome = h.findhome(args.home)
     print(myhome)
 
     print('------------------------- Home state ----------------------------------')
     hs = h.homestatus()
 
+    if args.save != "":
+        with open(args.save, "w") as wfile:
+            json.dump(hs, wfile)
+            wfile.close()
 
-if args.debug:
-    print('------------------------- Home devices --------------------------------')
-    for i in hs['devices']:
-        print(json.dumps(i))
+logger.debug("------------------------- Device dump -------------------------")
+for i in hs['devices']:
+    logger.debug(json.dumps(i))
 
+print("------------------------- Device table -------------------------")
 for d in hs['devices']:
     dev_unique_id = d['serialNumber']
     for feature in d['features'].keys():
@@ -134,10 +141,7 @@ for d in hs['devices']:
         online = 'online' if d['online'] else "offline"
         print(f"Serial {dev_unique_id} --> {d['modelName']} name {d['name']}-{feature} link state {online} links to {ds['networklinkaddress']['value']} strenght {ds['networklinkstrength']['value']}")
 
-if args.save != "":
-    with open(args.save, "w") as wfile:
-        json.dump(hs, wfile)
-        wfile.close()
+
 
 mq = mqtt.Client(progname)
 mq.connect(args.mqttserver, port=args.mqttport, keepalive=600)
@@ -146,8 +150,7 @@ hm = MQTT_AD_Config(
     mq, 
     discovery_topic = args.discoveryprefix,
     state_topic = args.stateprefix,
-    debug = args.debug,
-    verbose = args.verbose
+    logger = logger
 )
 
 if args.deviceprefix != "":
@@ -175,36 +178,43 @@ devices_lowbat = MQTT_AD_Device("Homely device low battery", f"{devprefix}.batte
 devices_lowbat.device_config_publish()
 
 for d in hs['devices']:
-    serial = d['serialNumber']
+    serial    = d['serialNumber']
+    devid     = d['id']
+    devname   = d['name']
+    modelname = d['modelName']
     for feature in d['features'].keys():
         ds=d['features'][feature]['states']
         for state in ds.keys():
-            dv = ds[state]['value']
-            if state not in ['temperature']:
+            if state not in ['alarm','temperature']:
                 continue
-            print(f"Serial {serial} --> {d['modelName']} name {d['name']}-{feature} {state} {dv}")
-            unique_name = f"{d['modelName']}-{serial}"
-            component[unique_name] = MQTT_AD_Device(f"{d['name']}-{feature}", unique_name, "temperature")
-            component[unique_name].device_config_publish()
+            dv = ds[state]['value']
+            ds = f"Serial {serial} --> {modelname} name {devname}-{feature} {state} {dv}"
+            parent_name = f"{modelname}_{serial}"
+            # print(f"DEBUG: {ds} --> {dv}")
+            if feature == 'temperature':
+                print(ds)
+                sub_device="temp"
+                component[f"{devid}_{sub_device}"] = component[f"{parent_name}_{sub_device}"] = MQTT_AD_Device(f"{devname}-{sub_device}", parent_name, sub_device)
+                component[f"{parent_name}_{sub_device}"].device_config_publish()
+            elif modelname == "Motion Sensor Mini" and state == 'alarm':
+                print(ds)
+                sub_device="motion"
+                component[f"{devid}_{sub_device}"] = component[f"{parent_name}_{sub_device}"] = MQTT_AD_Device(f"{devname}-{sub_device}", parent_name, sub_device)
+                component[f"{parent_name}_{sub_device}"].device_config_publish()
+            elif modelname == "Window Sensor" and state == 'alarm':
+                print(ds)
+                sub_device="door"
+                component[f"{devid}_{sub_device}"] = component[f"{parent_name}_{sub_device}"] = MQTT_AD_Device(f"{devname}-{sub_device}", parent_name, sub_device)
+                component[f"{parent_name}_{sub_device}"].device_config_publish()
 
-sleepfor = 15 
-prev_st  = ""
 
-while True:
-    if args.verbose:
-        print("Sleep for",sleepfor,"seconds ... ", end='', flush=True)
-
-    time.sleep(sleepfor)
-    sleepfor = args.sleep
-
-    print("Refreshing alarm status ... ")
-    token = h.tokenrefresh()
-    hs    = h.homestatus()
+def alarm_state(ht):
+    global alarm_previous_state
     try:
-        ht = hs['alarmState']
         st = alarmstates(ht)
-        if st != prev_st:
-            prev_st = st
+        if st != alarm_previous_state:
+            print(f"Homely alarm state change to {ht} (previous state {alarm_previous_state})")
+            alarm_previous_state = st
             main_alarm.device_message(st)
             if args.domoticzurl != "":
                 ds = alarmdomocodes(ht)
@@ -213,28 +223,105 @@ while True:
     except KeyError:
         pass  
 
+#
+# SocketIO message handler - running in separate thread
+#
+def siomsg(smsg):
+    logger.info('websocket callback:', smsg)
+    t = smsg['type']
+    d = smsg['data']
+    if t == 'device-state-changed':
+        devid = d['deviceId']
+        for c in d['changes']:
+            if c['stateName'] == 'temperature':
+                id_device=f"{devid}_temp"
+                if id_device in component:
+                    component[id_device].device_json({ "temperature": c['value'] }, timestamp = c['lastUpdated'])
+                else:
+                    logger.warning("Unknown temperature device id", devid)
+            elif c['stateName'] == 'alarm':
+                onoff = 'ON' if c['value'] else 'OFF'
+                # 
+                # Only motion sensors and window/door sensors supported
+                #
+                for sub_device in ['motion', 'door']:
+                    id_device=f"{devid}_{sub_device}"
+                    if id_device in component:
+                        component[id_device].device_message(onoff, timestamp = c['lastUpdated'])
+                        break
+    elif t == 'alarm-state-changed': 
+        alarm_state(d['state'])
+
+h.startsio(siomsg)
+
+while True:
+    logger.info("Sleep for %d seconds ... ", sleepfor)
+
+    sleepsec = 0
+    #
+    # Chop it into 5 sec intervals to check fock socketio disconnects
+    #
+    while (sleepsec < sleepfor):
+        time.sleep(5)
+        sleepsec = sleepsec + 5
+        siorc = h.sioexit()
+        if siorc > 0:
+            logger.error("SocketIO initiated exit ... ")
+            sys.exit(siorc)
+
+    sleepfor = args.sleep
+
+    print("Refreshing alarm status ... ")
+    token = h.tokenrefresh()
+    hs    = h.homestatus()
+    alarm_state(hs['alarmState'])
+
     devs_online  = "ON"
     devs_lowbat  = "OFF"
     devs_tamper  = "OFF"
     devs_lqi     = 100
     for d in hs['devices']:
         serial = d['serialNumber']
+        devid     = d['id']
+        devname   = d['name']
+        modelname = d['modelName']
+
         if not d['online']:
             devs_online = "OFF"
         for feature in d['features'].keys():
             ds=d['features'][feature]['states']
             for state in ds.keys():
+                parent_name = f"{modelname}_{serial}"
                 dv = ds[state]['value']
-                if state == 'networklinkstrength' and int(dv) < devs_lqi:
+                dt = ds[state]['lastUpdated']
+                if dv is None or dt is None:
+                    # logger.debug("Device %s state %s has missing value or timestamp", parent_name, state)
+                    continue
+                #
+                # Should not be needed any more , and is a good GUI indicator of socketio problems
+                # Still handy to include as device creation may not happen until a value is sent
+                #
+                if feature == 'temperature':
+                    sub_device="temp"
+                    component[f"{parent_name}_{sub_device}"].device_json({ "temperature": dv }, timestamp=dt)
+                elif state == 'alarm':
+                    onoff = 'ON' if dv else 'OFF'
+                    if modelname == "Motion Sensor Mini":
+                        sub_device="motion"
+                        # print(f"BUG: {parent_name}_{sub_device}", onoff, dt)
+                        component[f"{parent_name}_{sub_device}"].device_message(onoff, timestamp=dt)
+                    elif modelname == "Window Sensor":
+                        # Used mostly for doors - even if model name is Window Sensor
+                        sub_device="door"
+                        component[f"{parent_name}_{sub_device}"].device_message(onoff, timestamp=dt)
+                elif state == 'networklinkstrength' and int(dv) < devs_lqi:
                     devs_lqi = int(dv)
                 elif state == 'low' and dv:
                     devs_lowbat = "ON"
                 elif state == 'tamper' and dv:
                     devs_tamper = "ON"
-                if state not in ['temperature']:
-                    continue
-                unique_name = f"{d['modelName']}-{serial}"
-                component[unique_name].device_json({ "temperature": dv }, timestamp=ds[state]['lastUpdated'])
+
+
 
     devices_lqi.device_json({ "linkquality": devs_lqi })
     devices_online.device_message(devs_online)
