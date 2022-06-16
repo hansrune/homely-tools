@@ -63,19 +63,19 @@ This should list some home details, device details, a device table, then start t
 INFO:engineio.client:WebSocket upgrade was successful
 INFO:engineio.client:Sending packet PING data None
 INFO:engineio.client:Received packet PONG data None
-INFO:engineio.client:Received packet MESSAGE data 2["event",{"type":"device-state-changed","data":{"deviceId":"e143ddc5-33e9-492c-b1be-...","gatewayId":"5e2eed4f-f018-4c8f-ba37-...","locationId":"fb324b11-8301-4749-8a8f-...","modelId":"87fa1ae0-824f-4d42-be7a-...","rootLocationId":"5b11a8b9-e90c-40b5-b2d0-...","changes":[{"feature":"temperature","stateName":"temperature","value":19.2,"lastUpdated":"2022-06-09T06:36:04.875Z"}]}}]
+INFO:engineio.client:Received packet MESSAGE data 2["event",{"type":"device-state-changed","data":{"deviceId":"e143ddc5-33e9-492c-b1be-...","gatewayId":"5e2eed4f-f018-4c8f-ba37-...","locationId":"fb324b11-8301-4749-8a8f-...","modelId":"87fa1ae0-824f-4d42-be7a-...","rootLocationId":"5b11a8b9-e90c-40b5-b2d0-...","changes":[{"feature":"temperature","stateName":"temperature","value":19.2,"lastUpdated":"2022-HH-MMT06:36:04.875Z"}]}}]
 INFO:socketio.client:Received event "event" [/]
-websocket callback: {'type': 'device-state-changed', 'data': {'deviceId': 'e143ddc5-33e9-492c-b1be-...', 'gatewayId': '5e2eed4f-f018-4c8f-ba37-...', 'locationId': 'fb324b11-8301-4749-8a8f-...', 'modelId': '87fa1ae0-824f-4d42-be7a-...', 'rootLocationId': '5b11a8b9-e90c-40b5-b2d0-...', 'changes': [{'feature': 'temperature', 'stateName': 'temperature', 'value': 19.2, 'lastUpdated': '2022-06-09T06:36:04.875Z'}]}}
+websocket callback: {'type': 'device-state-changed', 'data': {'deviceId': 'e143ddc5-33e9-492c-b1be-...', 'gatewayId': '5e2eed4f-f018-4c8f-ba37-...', 'locationId': 'fb324b11-8301-4749-8a8f-...', 'modelId': '87fa1ae0-824f-4d42-be7a-...', 'rootLocationId': '5b11a8b9-e90c-40b5-b2d0-...', 'changes': [{'feature': 'temperature', 'stateName': 'temperature', 'value': 19.2, 'lastUpdated': '2022-XX-09T06:36:04.875Z'}]}}
 INFO:engineio.client:Sending packet PING data None
 INFO:engineio.client:Received packet PONG data None
 .
 .
 INFO:engineio.client:Sending packet PING data None
 INFO:engineio.client:Received packet PONG data None
-websocket callback: {'type': 'alarm-state-changed', 'data': {'locationId': '5b11a8b9-e90c-40b5-b2d0-...', 'state': 'ARM_NIGHT_PENDING', 'timestamp': '2022-06-09T06:52:23.656Z'}}
-INFO:engineio.client:Received packet MESSAGE data 2["event",{"type":"alarm-state-changed","data":{"locationId":"5b11a8b9-e90c-40b5-b2d0-...","state":"ARMED_NIGHT","userId":"1985b1af-62de-4cc2-8fe7-...","userName":"Hans Rune  Bue","timestamp":"2022-06-09T06:52:23.605Z","eventId":1249}}]
+websocket callback: {'type': 'alarm-state-changed', 'data': {'locationId': '5b11a8b9-e90c-40b5-b2d0-...', 'state': 'ARM_NIGHT_PENDING', 'timestamp': '2022-HH-MMT06:52:23.656Z'}}
+INFO:engineio.client:Received packet MESSAGE data 2["event",{"type":"alarm-state-changed","data":{"locationId":"5b11a8b9-e90c-40b5-b2d0-...","state":"ARMED_NIGHT","userId":"1985b1af-62de-4cc2-8fe7-...","userName":"Your full name","timestamp":"2022-HH-MMT06:52:23.605Z","eventId":1249}}]
 INFO:socketio.client:Received event "event" [/]
-websocket callback: {'type': 'alarm-state-changed', 'data': {'locationId': '5b11a8b9-e90c-40b5-b2d0-...', 'state': 'ARMED_NIGHT', 'userId': '1985b1af-62de-4cc2-8fe7-...', 'userName': 'Hans Rune  Bue', 'timestamp': '2022-06-09T06:52:23.605Z', 'eventId': 1249}}
+websocket callback: {'type': 'alarm-state-changed', 'data': {'locationId': '5b11a8b9-e90c-40b5-b2d0-...', 'state': 'ARMED_NIGHT', 'userId': '1985b1af-62de-4cc2-8fe7-...', 'userName': 'Your full name', 'timestamp': '2022-HH-MMT06:52:23.605Z', 'eventId': 1249}}
 INFO:engineio.client:Sending packet PING data None
 INFO:engineio.client:Received packet PONG data None
 ```
@@ -131,4 +131,3 @@ Available environment settings:
 * `MQTT_STATE` - The MQTT state topic prefix. For HA users, this is normally also *homeassistant* or *hass/status*
 * `MQTT_SERVER` - Defaults to 127.0.0.1
 * `MQTT_PORT` - Defaults to 1883
-
