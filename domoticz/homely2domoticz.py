@@ -11,24 +11,24 @@ logging.basicConfig(stream=sys.stdout)
 def alarmdomocodes(state):
     return {
         'DISARMED':          '0',
-        'ARM_STAY_PENDING':  '1',
-        'ARM_NIGHT_PENDING': '1',
+        'ARM_PENDING':       '0',
+        'ARM_AWAY_PENDING':  '0',
+        'ARM_STAY_PENDING':  '0',
+        'ARM_NIGHT_PENDING': '0',
         'ARMED_STAY':        '1',
         'ARMED_NIGHT':       '1',
-        'ARM_AWAY_PENDING':  '2',
-        'ARM_PENDING':       '2',
         'ARMED_AWAY':        '2'
     }.get(state,'')
 
 def alarmlevels(state):
     return {
         'DISARMED':          '0',
-        'ARM_STAY_PENDING':  '10',
+        'ARM_PENDING':       '0',
+        'ARM_STAY_PENDING':  '0',
+        'ARM_NIGHT_PENDING': '0',
+        'ARM_AWAY_PENDING':  '0',
         'ARMED_STAY':        '10',
-        'ARM_NIGHT_PENDING': '20',
         'ARMED_NIGHT':       '20',
-        'ARM_AWAY_PENDING':  '30',
-        'ARM_PENDING':       '30',
         'ARMED_AWAY':        '30'
     }.get(state,'')
 

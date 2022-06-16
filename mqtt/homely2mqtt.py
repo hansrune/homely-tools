@@ -8,7 +8,7 @@ from MQTT_AD_Devices import *
 progname  = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 component = {}
 sleepfor  = 15 
-alarm_previous_state = "dummy startup state"
+alarm_previous_state = "in startup state"
 
 # Set up root logger
 logger = logging.getLogger(progname)
@@ -20,6 +20,7 @@ def alarmstates(state):
         'ARM_STAY_PENDING':  'Disarmed',
         'ARM_NIGHT_PENDING': 'Disarmed',
         'ARM_AWAY_PENDING':  'Disarmed',
+        'ARM_PENDING':       'Disarmed',
         'ARMED_STAY':        'Armed stay',
         'ARMED_NIGHT':       'Armed night',
         'ARMED_AWAY':        'Armed away'

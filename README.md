@@ -33,6 +33,8 @@ This service will provide:
 
 This service uses the MQTT Auto Discovery features in Home Assistant and recent releases of Domoticz (and probably more systems) for fully automatic device creation
 
+The service will listen for web socket events as well as poll the home / device statuses. The web socket will deliver updates in near real time. The polled status is a fallback for the websocket not being updated as well as populating MQTT auto discovery devices that do not appear until a payload message is received.
+
 ## Download, update and install 
 
 Please download locally to a user with sudo root privileges, and install from there:
@@ -44,8 +46,41 @@ cd homely-tools
 
 ... or update your local source using `git pull`
 
+### Initial tests
 
-### Initial steps
+You can test the communication with the API services as follows:
+
+```bash
+export HOMELY_USER=<your Homely login name (email)
+export HOMELY_PASSWORD=<your password>
+export PYTHONPATH="$PWD/API"
+./ws/ws-test-threaded.py -d
+```
+
+This should list some home details, device details, a device table, then start the websocket communication, ending something like this:
+
+```txt
+INFO:engineio.client:WebSocket upgrade was successful
+INFO:engineio.client:Sending packet PING data None
+INFO:engineio.client:Received packet PONG data None
+INFO:engineio.client:Received packet MESSAGE data 2["event",{"type":"device-state-changed","data":{"deviceId":"e143ddc5-33e9-492c-b1be-...","gatewayId":"5e2eed4f-f018-4c8f-ba37-...","locationId":"fb324b11-8301-4749-8a8f-...","modelId":"87fa1ae0-824f-4d42-be7a-...","rootLocationId":"5b11a8b9-e90c-40b5-b2d0-...","changes":[{"feature":"temperature","stateName":"temperature","value":19.2,"lastUpdated":"2022-HH-MMT06:36:04.875Z"}]}}]
+INFO:socketio.client:Received event "event" [/]
+websocket callback: {'type': 'device-state-changed', 'data': {'deviceId': 'e143ddc5-33e9-492c-b1be-...', 'gatewayId': '5e2eed4f-f018-4c8f-ba37-...', 'locationId': 'fb324b11-8301-4749-8a8f-...', 'modelId': '87fa1ae0-824f-4d42-be7a-...', 'rootLocationId': '5b11a8b9-e90c-40b5-b2d0-...', 'changes': [{'feature': 'temperature', 'stateName': 'temperature', 'value': 19.2, 'lastUpdated': '2022-XX-09T06:36:04.875Z'}]}}
+INFO:engineio.client:Sending packet PING data None
+INFO:engineio.client:Received packet PONG data None
+.
+.
+INFO:engineio.client:Sending packet PING data None
+INFO:engineio.client:Received packet PONG data None
+websocket callback: {'type': 'alarm-state-changed', 'data': {'locationId': '5b11a8b9-e90c-40b5-b2d0-...', 'state': 'ARM_NIGHT_PENDING', 'timestamp': '2022-HH-MMT06:52:23.656Z'}}
+INFO:engineio.client:Received packet MESSAGE data 2["event",{"type":"alarm-state-changed","data":{"locationId":"5b11a8b9-e90c-40b5-b2d0-...","state":"ARMED_NIGHT","userId":"1985b1af-62de-4cc2-8fe7-...","userName":"Your full name","timestamp":"2022-HH-MMT06:52:23.605Z","eventId":1249}}]
+INFO:socketio.client:Received event "event" [/]
+websocket callback: {'type': 'alarm-state-changed', 'data': {'locationId': '5b11a8b9-e90c-40b5-b2d0-...', 'state': 'ARMED_NIGHT', 'userId': '1985b1af-62de-4cc2-8fe7-...', 'userName': 'Your full name', 'timestamp': '2022-HH-MMT06:52:23.605Z', 'eventId': 1249}}
+INFO:engineio.client:Sending packet PING data None
+INFO:engineio.client:Received packet PONG data None
+```
+
+### Initial installation steps
 
 On initial setup, some prereqs need to be provided:
 
@@ -61,11 +96,10 @@ On initial setup, some prereqs need to be provided:
 2. You will also need to install required python3 modules. Currently something like this:
 
     ```bash
-    sudo pip3 install request pahoo-mqtt
+    sudo pip3 install request pahoo-mqtt "python-socketio[client]<5.0"
     ```
 
 3. A separate user account for running the service is recommended. The default setup assumes that user `domo` exists
-
 
 ### Install or update steps
 
@@ -97,4 +131,3 @@ Available environment settings:
 * `MQTT_STATE` - The MQTT state topic prefix. For HA users, this is normally also *homeassistant* or *hass/status*
 * `MQTT_SERVER` - Defaults to 127.0.0.1
 * `MQTT_PORT` - Defaults to 1883
-

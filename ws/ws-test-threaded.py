@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-#
-#
 
 # sudo pip3 install "python-socketio[client]<5.0"
 
@@ -19,7 +17,7 @@ progname = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 logger = logging.getLogger(progname)
 logging.basicConfig(stream=sys.stdout)
 
-def_user = def_password =  ""
+def_user = def_password = ""
 try:
 	def_user = os.environ['HOMELY_USER']
 except:
@@ -72,7 +70,6 @@ else:
     print('------------------------- Home state ----------------------------------')
     hs = h.homestatus()
 
-
 if args.debug:
     print('------------------------- Home devices --------------------------------')
     for i in hs['devices']:
@@ -93,14 +90,13 @@ if args.save != "":
         wfile.close()
 
 if args.debug:
-    sio = socketio.Client(logger=True, engineio_logger=True)
+    sio = socketio.Client(logger=logger, engineio_logger=logger)
 else:
     sio = socketio.Client()
 
 @sio.event
 def connect():
     print('websocket: connected to server')
-
 
 @sio.event
 def disconnect():
@@ -110,7 +106,6 @@ def disconnect():
 def on_message(data):
     print('websocket: message: ', data)
 
-
 def siothread():
     curl = f"https://sdk.iotiliti.cloud"
     curl = f"https://sdk.iotiliti.cloud?locationId={myhome['locationId']}&token=Bearer%20{token}"
@@ -118,13 +113,13 @@ def siothread():
     hdrs = { 'Authorization' : f"Bearer {token}", 'locationId' : myhome['locationId'] }
     print("Connect to", curl, "using headers", hdrs)
     sio.connect(curl , headers=hdrs)
+    # sio.emit('CONNECT')
     sio.wait()
 
 t = threading.Thread(target=siothread, daemon=True)
 t.start()
 
 sleepfor = 15 
-prev_st  = ""
 
 while True:
     if args.verbose:
