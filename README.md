@@ -48,7 +48,13 @@ cd homely-tools
 
 ### Initial tests
 
-You can test the communication with the API services as follows:
+These python modules are required:
+
+```bash
+pip3 install request pahoo-mqtt "python-socketio[client]<5.0"
+```
+
+You can then test the communication with the API services as follows:
 
 ```bash
 export HOMELY_USER=<your Homely login name (email)
@@ -96,7 +102,7 @@ On initial setup, some prereqs need to be provided:
 2. You will also need to install required python3 modules. Currently something like this:
 
     ```bash
-    sudo pip3 install request pahoo-mqtt "python-socketio[client]<5.0"
+    pip3 install request pahoo-mqtt "python-socketio[client]<5.0"
     ```
 
 3. A separate user account for running the service is recommended. The default setup assumes that user `domo` exists
