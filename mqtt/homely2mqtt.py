@@ -8,7 +8,7 @@ from MQTT_AD_Devices import *
 progname  = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 component = {}
 sleepfor  = 15 
-alarm_previous_state = "dummy startup state"
+alarm_previous_state = "in startup state"
 
 # Set up root logger
 logger = logging.getLogger(progname)
