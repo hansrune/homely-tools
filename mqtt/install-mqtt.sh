@@ -1,7 +1,7 @@
 #!/bin/bash
 PROG=$( basename $0 .sh )
 SERVICE="homely2mqtt"
-REQUIREMENTS="requests paho.mqtt.client:pahoo-mqtt socketio:python-socketio[client]<5.0"
+REQUIREMENTS="requests paho.mqtt.client:paho-mqtt socketio:python-socketio[client]<5.0"
 
 SRCDIR=$( dirname $0 )
 DESTDIR="/opt/${SERVICE}/"
