@@ -17,24 +17,24 @@ logging.basicConfig(stream=sys.stdout)
 def alarmstates(state):
     return {
         'DISARMED':          'Disarmed',
-        'ARM_STAY_PENDING':  'Disarmed',
-        'ARM_NIGHT_PENDING': 'Disarmed',
-        'ARM_AWAY_PENDING':  'Disarmed',
         'ARM_PENDING':       'Disarmed',
+        'ARM_STAY_PENDING':  'Armed stay',
         'ARMED_STAY':        'Armed stay',
+        'ARM_NIGHT_PENDING': 'Armed night',
         'ARMED_NIGHT':       'Armed night',
+        'ARM_AWAY_PENDING':  'Armed away',
         'ARMED_AWAY':        'Armed away'
     }.get(state,"Error")
 
 def alarmdomocodes(state):
     return {
         'DISARMED':          '0',
-        'ARM_STAY_PENDING':  '0',
-        'ARM_NIGHT_PENDING': '0',
-        'ARMED_STAY':        '1',
-        'ARMED_NIGHT':       '1',
-        'ARM_AWAY_PENDING':  '0',
         'ARM_PENDING':       '0',
+        'ARM_STAY_PENDING':  '0',
+        'ARMED_STAY':        '0',
+        'ARM_NIGHT_PENDING': '1',
+        'ARMED_NIGHT':       '1',
+        'ARM_AWAY_PENDING':  '2',
         'ARMED_AWAY':        '2'
     }.get(state,'')
 
