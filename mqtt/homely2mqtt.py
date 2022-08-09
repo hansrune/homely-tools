@@ -23,7 +23,8 @@ def alarmstates(state):
         'ARM_NIGHT_PENDING': 'Armed night',
         'ARMED_NIGHT':       'Armed night',
         'ARM_AWAY_PENDING':  'Armed away',
-        'ARMED_AWAY':        'Armed away'
+        'ARMED_AWAY':        'Armed away',
+        'BREACHED':          'Alarmed'
     }.get(state,"Error")
 
 def alarmdomocodes(state):
@@ -161,7 +162,7 @@ else:
 
 main_alarm = MQTT_AD_Device("Homely alarm state", f"{devprefix}.alarmstate", "selector")
 main_alarm.device_config_append({ 
-    "options" : [ "Disarmed", "Armed stay", "Armed night", "Armed away", "Transitioning", "Error" ],
+    "options" : [ "Disarmed", "Armed stay", "Armed night", "Armed away", "Alarmed", "Transitioning", "Error" ],
     "initial_option" : "Transitioning"
 })
 main_alarm.device_config_publish()
