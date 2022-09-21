@@ -63,7 +63,7 @@ def normalized_name(name):
 
 class MQTT_AD_Config(dict):
 
-    def __init__(self, mqtt_client, discovery_topic="homeassistant", state_topic=None, config_file=None, logger=None):
+    def __init__(self, mqtt_client, discovery_topic="homeassistant", state_topic=None, config_filename=None, logger=None):
         if logger is None:
             self.logger = default_logger
         else:
@@ -82,10 +82,10 @@ class MQTT_AD_Config(dict):
             self.logger.info("Domoticz mode")
         self.mqttclient      = mqtt_client
         self.repeat_timeout  = 1200
-        if config_file is not None:
+        if config_filename is not None:
             self.logger.info("Reading device config from %s",config_file)
-            with open(config_yaml_path) as config_file:
-                self.device_config = yaml.safe_load(config_file)
+            with open(config_filename) as f_config:
+                self.device_config = yaml.safe_load(f_config)
         global mqconf
         mqconf = self  
         return
@@ -162,3 +162,4 @@ class MQTT_AD_Device:
     def device_json(self, values, timestamp=None):
         return self.device_message(json.dumps(values), timestamp)
 
+# vim:ts=4:sw=4
