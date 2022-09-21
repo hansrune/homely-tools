@@ -40,3 +40,5 @@ sudo systemctl daemon-reload
 sudo systemctl restart ${SERVICE}
 sudo systemctl enable ${SERVICE}
 sudo journalctl -fu ${SERVICE}
+
+# vim:ts=4:sw=4
