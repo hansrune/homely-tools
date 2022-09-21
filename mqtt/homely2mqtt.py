@@ -261,7 +261,7 @@ while True:
 
     sleepsec = 0
     #
-    # Chop it into 5 sec intervals to check fock socketio disconnects
+    # Chop it into 5 sec intervals to check for socketio disconnects
     #
     while (sleepsec < sleepfor):
         time.sleep(5)
