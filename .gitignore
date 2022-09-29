@@ -12,3 +12,6 @@
 
 # User-specific files
 *.out
+
+# MacOS 
+.DS_Store
