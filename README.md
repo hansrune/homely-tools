@@ -35,7 +35,7 @@ This service uses the MQTT Auto Discovery features in Home Assistant and recent 
 
 The service will listen for web socket events as well as poll the home / device statuses. The web socket will deliver updates in near real time. The polled status is a fallback for the websocket not being updated as well as populating MQTT auto discovery devices that do not appear until a payload message is received.
 
-## Download, update and install 
+## Download, update and install
 
 Please download locally to a user with sudo root privileges, and install from there:
 
@@ -46,13 +46,18 @@ cd homely-tools
 
 ... or update your local source using `git pull`
 
-### Initial tests
+### Create and activate python virtual environment
 
-These python modules are required:
+Create and populate a python venv. For example:
 
 ```bash
-pip3 install requests paho-mqtt "python-socketio[client]<5.0"
+python3 -m venv /opt/homely2mqtt/venv
+source /opt/homely2mqtt/venv/bin/activate
+pip3 install requests paho-mqtt "python-socketio[client]<5.0" pyyaml
 ```
+
+### Initial tests
+
 
 You can then test the communication with the API services as follows:
 
@@ -99,10 +104,12 @@ On initial setup, some prereqs need to be provided:
     sudo vim /etc/default/homely2mqtt                                      # edit settings with your favourite editor
     ```
 
-2. You will also need to install required python3 modules. Currently something like this:
+2. You will also need to install required python3 modules in python venv (virtual environment). Currently something like this:
 
     ```bash
-    pip3 install requests paho-mqtt "python-socketio[client]<5.0"
+    python3 -m venv /opt/homely2mqtt/venv
+    source /opt/homely2mqtt/venv/bin/activate 
+    pip3 install requests paho-mqtt "python-socketio[client]<5.0" pyyaml
     ```
 
 3. A separate user account for running the service is recommended. The default setup assumes that user `domo` exists
@@ -133,7 +140,7 @@ Available environment settings:
 
 * `HOMELY_USER` - Your Homely username (normally your email address)
 * `HOMELY_PASSWORD` - Your Homely password
-* `MQTT_DISCOVERY` - The MQTT discovery topic prefix, normally *homeassistant* 
-* `MQTT_STATE` - The MQTT state topic prefix. For HA users, this is normally also *homeassistant* or *hass/status*
+* `MQTT_DISCOVERY` - The MQTT discovery topic prefix, normally *homeassistant*
+* `MQTT_STATE` - The MQTT state topic prefix. By default this is now homely
 * `MQTT_SERVER` - Defaults to 127.0.0.1
 * `MQTT_PORT` - Defaults to 1883
