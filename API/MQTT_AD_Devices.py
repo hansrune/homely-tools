@@ -63,7 +63,8 @@ def normalized_name(name):
 
 class MQTT_AD_Config(dict):
 
-    def __init__(self, mqtt_client, discovery_topic="homeassistant", state_topic=None, config_filename=None, logger=None):
+    def __init__(self, sitename, mqtt_client, discovery_topic="homeassistant", state_topic=None, config_filename=None, logger=None):
+        self.site = sitename
         if logger is None:
             self.logger = default_logger
         else:
@@ -71,7 +72,7 @@ class MQTT_AD_Config(dict):
 
         self.discovery_topic = discovery_topic
         if (state_topic is None):
-            self.state_topic = discovery_topic
+            self.state_topic = 'homely'
         else:
             self.state_topic = state_topic
         if self.state_topic == self.discovery_topic:
@@ -93,39 +94,42 @@ class MQTT_AD_Config(dict):
 
 class MQTT_AD_Device:
 
-    def __init__(self, friendly_name, parent_name, sub_device):
-        self.friendly_name   = normalized_name(friendly_name)
-        parent_name          = normalized_name(parent_name)
-        device_component     = devtype_component(sub_device)
-        device_topic         = f"{mqconf.state_topic}/{parent_name}_{sub_device}"
+    def __init__(self, main_name, object_name, component):
+        self.friendly_name   = f"{mqconf.site} {main_name} {object_name}"
+        main_name            = normalized_name(main_name)
+        device_component     = devtype_component(component)
+        device_topic         = f"{mqconf.state_topic}/{mqconf.site}_{main_name}/{object_name}"
         self.state_topic     = f"{device_topic}/state"
-        #self.discovery_topic = f"{mqconf.discovery_topic}/{device_component}/{parent_name}/{sub_device}/config"
-        self.discovery_topic = f"{mqconf.discovery_topic}/{device_component}/{parent_name}_{sub_device}/config"
+        self.discovery_topic = f"{mqconf.discovery_topic}/{device_component}/{mqconf.site}_{main_name}/{object_name}/config"
         self.send_interval   = 1200
         self.last_update     = 0
         self.last_timestamp  = 'init time'
         self.last_state      = 'init state'
         self.config = { 
-            "name": self.friendly_name,
-            "unique_id": f"{parent_name}_{sub_device}",
+            "name": f"{mqconf.site} {main_name} {object_name}",
+            "unique_id": f"{mqconf.site}_{main_name}_{object_name}",
             "~": device_topic,
             "stat_t" : "~/state",
-            "cmd_t" : "~/set"
+            "cmd_t" : "~/set",
+            "device" : {
+                "identifiers" : [ f"{mqconf.site}_{main_name}" ],
+                "name" : f"{self.friendly_name}" 
+            }
         }
 
-        device_class = devtype_class(sub_device)
+        device_class = devtype_class(component)
         if device_class is not None:
             self.config['device_class'] = device_class
 
-        icon = devtype_icons(sub_device)
+        icon = devtype_icons(component)
         if icon is not None:
             self.config['icon'] = icon
 
-        unit = devtype_units(sub_device)
+        unit = devtype_units(component)
         if unit is not None:
             self.config['unit_of_measurement'] = unit
 
-        value_template = devtype_value_template(sub_device)
+        value_template = devtype_value_template(component)
         if value_template is not None:
             self.config['value_template'] = value_template
     
