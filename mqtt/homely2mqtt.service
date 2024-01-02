@@ -1,15 +1,22 @@
+#
+# For the python venv:
+#   python3 -m venv /opt/homely2mqtt/venv
+#   source /opt/homely2mqtt/venv/bin/activate
+#   pip3 install requests paho-mqtt "python-socketio[client]<5.0" pyyaml
+#
 [Unit]
-Description=Homely to MQTT 
+Description=Homely to MQTT
 After=network.target mosquitto.service
 
 [Service]
 User=domo
 Group=domo
 Environment="FLAGS=-v"
+Environment="TOPDIR=/opt/homely2mqtt"
 # .... add secrets etc in here - readable only by domo user
 EnvironmentFile=/etc/default/homely2mqtt
 #
-ExecStart=/usr/bin/python3 -u /opt/homely2mqtt/homely2mqtt.py $FLAGS
+ExecStart=/bin/bash -c 'source $TOPDIR/venv/bin/activate && exec python3 -u $TOPDIR/homely2mqtt.py $FLAGS'
 WorkingDirectory=/opt/homely2mqtt/
 Restart=always
 User=domo
