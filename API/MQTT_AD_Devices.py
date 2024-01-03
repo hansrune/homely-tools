@@ -56,9 +56,10 @@ def devtype_value_template(dt):
     }.get(dt, None)
 
 def normalized_name(name):
-    name = name.replace(" ", "_").lower()
-    name = name.replace(".", "_")
-    name = name.replace("-", "_")
+    to_replace = { " " : "_",  "." : "_", "-" : "_", "æ" : "a", "ø" : "o", "å" : "a", "Æ" : "A", "Ø" : "O",  "Å" : "A" }
+    
+    for c in to_replace.keys():
+      name = name.replace(c, to_replace[c])
     return name
 
 class MQTT_AD_Config(dict):
@@ -94,26 +95,29 @@ class MQTT_AD_Config(dict):
 
 class MQTT_AD_Device:
 
-    def __init__(self, main_name, object_name, component):
-        self.friendly_name   = f"{mqconf.site} {main_name} {object_name}"
-        main_name            = normalized_name(main_name)
+    def __init__(self, main_name, object_name, component, devattr={}):
+        self.friendly_name   = normalized_name(f"{mqconf.site} {main_name} {object_name}")
+        #self.friendly_name   = normalized_name(f"{mqconf.site} {main_name}")
+        main_name            = normalized_name(f"{mqconf.site}_{main_name}")
         device_component     = devtype_component(component)
-        device_topic         = f"{mqconf.state_topic}/{mqconf.site}_{main_name}/{object_name}"
+        device_topic         = f"{mqconf.state_topic}/{main_name}/{object_name}"
         self.state_topic     = f"{device_topic}/state"
-        self.discovery_topic = f"{mqconf.discovery_topic}/{device_component}/{mqconf.site}_{main_name}/{object_name}/config"
+        self.discovery_topic = f"{mqconf.discovery_topic}/{device_component}/{main_name}/{object_name}/config"
         self.send_interval   = 1200
         self.last_update     = 0
         self.last_timestamp  = 'init time'
         self.last_state      = 'init state'
         self.config = { 
-            "name": f"{mqconf.site} {main_name} {object_name}",
+            "name": f"{mqconf.site}_{main_name}",
             "unique_id": f"{mqconf.site}_{main_name}_{object_name}",
-            "~": device_topic,
-            "stat_t" : "~/state",
-            "cmd_t" : "~/set",
+            #"object_id": f"{mqconf.site}_{main_name}_{object_name}",
+            "state_topic" : f"{device_topic}/state",
+            "command_topic" : f"{device_topic}/set",
             "device" : {
-                "identifiers" : [ f"{mqconf.site}_{main_name}" ],
-                "name" : f"{self.friendly_name}" 
+                "identifiers" : [ main_name ],
+                "name" : main_name,
+                "manufacturer" : "Homely provided",
+                "model" : "Internal device"
             }
         }
 
@@ -132,6 +136,12 @@ class MQTT_AD_Device:
         value_template = devtype_value_template(component)
         if value_template is not None:
             self.config['value_template'] = value_template
+        
+        try:
+            self.config['device']['model'] = devattr['modelName']
+        except KeyError:
+            pass
+            
     
     def device_config_append(self, attributes):
         for a in attributes:

@@ -193,15 +193,15 @@ for d in hs['devices']:
             logger.debug(f"Serial {serial} --> {modelname} name {devname} feature {feature} {state} {dv}")
             if feature == 'temperature':
                 sub_device="temp"
-                component[f"{devid}_{sub_device}"] = MQTT_AD_Device(name_model, feature, sub_device)
+                component[f"{devid}_{sub_device}"] = MQTT_AD_Device(name_model, feature, sub_device, d)
                 component[f"{devid}_{sub_device}"].device_config_publish()
             elif modelname == "Motion Sensor Mini" and state == 'alarm':
                 sub_device="motion"
-                component[f"{devid}_{sub_device}"] = MQTT_AD_Device(name_model, feature, sub_device)
+                component[f"{devid}_{sub_device}"] = MQTT_AD_Device(name_model, feature, sub_device, d)
                 component[f"{devid}_{sub_device}"].device_config_publish()
             elif modelname == "Window Sensor" and state == 'alarm':
                 sub_device="door"
-                component[f"{devid}_{sub_device}"] = MQTT_AD_Device(name_model, feature, sub_device)
+                component[f"{devid}_{sub_device}"] = MQTT_AD_Device(name_model, feature, sub_device, d)
                 component[f"{devid}_{sub_device}"].device_config_publish()
 
 
