@@ -97,7 +97,6 @@ class MQTT_AD_Device:
 
     def __init__(self, main_name, object_name, component, devattr={}):
         self.friendly_name   = normalized_name(f"{mqconf.site} {main_name} {object_name}")
-        #self.friendly_name   = normalized_name(f"{mqconf.site} {main_name}")
         main_name            = normalized_name(f"{mqconf.site}_{main_name}")
         device_component     = devtype_component(component)
         device_topic         = f"{mqconf.state_topic}/{main_name}/{object_name}"
@@ -108,8 +107,8 @@ class MQTT_AD_Device:
         self.last_timestamp  = 'init time'
         self.last_state      = 'init state'
         self.config = { 
-            "name": f"{mqconf.site}_{main_name}",
-            "unique_id": f"{mqconf.site}_{main_name}_{object_name}",
+            "name": main_name,
+            "unique_id": f"{main_name}_{object_name}",
             #"object_id": f"{mqconf.site}_{main_name}_{object_name}",
             "state_topic" : f"{device_topic}/state",
             "command_topic" : f"{device_topic}/set",
