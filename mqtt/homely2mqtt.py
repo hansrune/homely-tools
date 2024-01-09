@@ -48,6 +48,11 @@ try:
 	def_password = os.environ['HOMELY_PASSWORD']
 except:pass
 
+def_homename = ""
+try: 
+    def_homename = os.environ['HOMELY_HOME']
+except:pass
+
 def_discovery_prefix = "homeassistant"
 try: 
     def_discovery_prefix = os.environ['MQTT_DISCOVERY']
@@ -73,7 +78,7 @@ argp.add_argument('-u','--username',        default=def_user,                hel
 argp.add_argument('-p','--password',        default=def_password,            help="Homely password (only if you are alone on your system)") 
 argp.add_argument('-l','--load',            default="",                      help="Load json state data from file") 
 argp.add_argument('-s','--save',            default="",                      help="Save json state data to file") 
-argp.add_argument(     '--home',            default="",                      help="Home name in Homely") 
+argp.add_argument(     '--home',            default=def_homename,            help="Home name in Homely") 
 argp.add_argument(     '--siteprefix',      default="",                      help="Site prefix / home name") 
 argp.add_argument(     '--domoticzurl',     default="",                      help="Homely password (only if you are alone on your system)") 
 argp.add_argument(     '--sleep',           default=120, type=int,           help="Sleep interval") 
@@ -117,8 +122,9 @@ else:
     token = h.login(args.username, args.password)
     token = h.tokenrefresh()
 
-    print('------------------------- My home ----------------------------------')
+    print('------------------------- My home quewry ---------------------------')
     myhome = h.findhome(args.home)
+    print('------------------------- My home result ---------------------------')
     print(myhome)
 
     print('------------------------- Home state ----------------------------------')

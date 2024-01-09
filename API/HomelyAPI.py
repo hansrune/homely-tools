@@ -81,21 +81,21 @@ class HomelyAPI:
 
     def findhome(self, location = ""):
         locations = self.get("Locations", homely_locations, headers={ 'Authorization' : 'Bearer ' + self.auth['access_token'] } )
-        locfound  = False
+
+        # print(locations)
+        # print('-------------------------  end of location ----------------------------------')
+
         if location == "":
-            locobj   = locations[0]
-            locfound = True
-        else:
-            for locobj in locations:
-                if locobj['name'] == location:
-                    locfound = True
-                    break
-        if locfound:
+            locobj         = locations[0]
             self.locationid = locobj['locationId']
             return locobj
         else:
-            self.logger.error("Location name %s not found", location)
-            exit(1)
+            for locobj in locations:
+                if locobj['name'] == location:
+                    self.locationid = locobj['locationId']
+                    return locobj
+        self.logger.error("Location name %s not found", location)
+        exit(1)
 
     def homestatus(self):
         self.homestate = self.get("Home status", homely_homes + self.locationid, headers={ 'Authorization' : 'Bearer ' + self.auth['access_token'] } )
