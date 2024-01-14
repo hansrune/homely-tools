@@ -16,7 +16,7 @@ then
     exit 1
 fi
 
-echo "${PROG}: Setting ${DESTDIR}"
+echo "${PROG}: Setting up installation directory in ${DESTDIR}"
 sudo mkdir -p ${DESTDIR}
 sudo chown ${USER} ${DESTDIR}
 
