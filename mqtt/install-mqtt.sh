@@ -42,12 +42,13 @@ done
 
 if [ -f "${DESTDIR}/${SERVICE}.service" ] 
 then
-    echo "${PROG}: Leaving existing ${DESTDIR}/${SERVICE}.service as is. To update: cp -v ${SRCDIR}/${SERVICE}.service ${DESTDIR}/${SERVICE}.service"
+    echo "${PROG}: Leaving existing ${DESTDIR}/${SERVICE}.service as is"
+    echo "${PROG}: You may want to check for updates with diff ${SRCDIR}/${SERVICE}.service ${DESTDIR}/${SERVICE}.service"
 else
     sed "s/domo/$USER/g" < ${SRCDIR}/homely2mqtt.service > ${DESTDIR}/${SERVICE}.service
 fi
 
-set -x 
+
 cp -v ${SRCDIR}/${SERVICE}.py ${SRCDIR}/../API/HomelyAPI.py ${SRCDIR}/../API/MQTT_AD_Devices.py ${DESTDIR}/
 chmod u=rwx,go=rx ${DESTDIR}/*.py
 chmod a+rX ${DESTDIR} ${DESTDIR}/*
@@ -55,6 +56,8 @@ sudo cp -v ${DESTDIR}/${SERVICE}.service /etc/systemd/system/${SERVICE}.service
 sudo systemctl daemon-reload
 sudo systemctl restart ${SERVICE}
 sudo systemctl enable ${SERVICE}
-sudo journalctl -fu ${SERVICE}
+
+echo -e  "\n$PROG: Installation complete"
+echo -e  "\n$PROG: Recommend to check on service with:\n    systemctl status ${SERVICE}\n\nand:\n    sudo journalctl -fu ${SERVICE}"
 
 # vim:ts=4:sw=4
