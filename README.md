@@ -46,18 +46,31 @@ cd homely-tools
 
 ... or update your local source using `git pull`
 
-### Create and activate python virtual environment
+
+### Quick install 
+
+If you are happy with running the service from `/opt/homely2mqtt` as the user `domo`, you can install or update as follows:
+
+```bash
+mqtt/install-mqtt.sh
+```
+
+After some prereq tests, the commands in effect are echoed. The intent is simply to make it easier to understand the setup process, and possibly adapt things as needed.
+
+
+### Manual install
+
+#### Create and activate python virtual environment
 
 Create and populate a python venv. For example:
 
 ```bash
-python3 -m venv /opt/homely2mqtt/venv
-source /opt/homely2mqtt/venv/bin/activate
+python3 -m venv /opt/homely2mqtt/
+source /opt/homely2mqtt/bin/activate
 pip3 install requests paho-mqtt "python-socketio[client]<5.0" pyyaml
 ```
 
-### Initial tests
-
+#### Initial tests
 
 You can then test the communication with the API services as follows:
 
@@ -91,7 +104,7 @@ INFO:engineio.client:Sending packet PING data None
 INFO:engineio.client:Received packet PONG data None
 ```
 
-### Initial installation steps
+#### Manual installation steps
 
 On initial setup, some prereqs need to be provided:
 
@@ -99,9 +112,9 @@ On initial setup, some prereqs need to be provided:
 
     ```bash
     sudo cp -v mqtt/defaults-homely2mqtt-template /etc/default/homely2mqtt # copy the template
-    sudo chown domo /etc/default/homely2mqtt                               # domo is the default service user account
+    sudo chown $USER /etc/default/homely2mqtt                              # Current user is the default service user account
     sudo chmod 600 /etc/default/homely2mqtt                                # make sure no other user can read it
-    sudo vim /etc/default/homely2mqtt                                      # edit settings with your favourite editor
+    sudo vim /etc/default/homely2mqtt                                      # edit setting:xs with your favourite editor
     ```
 
 2. You will also need to install required python3 modules in python venv (virtual environment). Currently something like this:
@@ -109,20 +122,11 @@ On initial setup, some prereqs need to be provided:
     ```bash
     python3 -m venv /opt/homely2mqtt/venv
     source /opt/homely2mqtt/venv/bin/activate 
+    pip3 install --upgrade pip
     pip3 install requests paho-mqtt "python-socketio[client]<5.0" pyyaml
     ```
 
-3. A separate user account for running the service is recommended. The default setup assumes that user `domo` exists
-
-### Install or update steps
-
-If you are happy with running the service from `/opt/homely2mqtt` as the user `domo`, you can install or update as follows:
-
-```bash
-mqtt/install-mqtt.sh
-```
-
-After some prereq tests, the commands in effect are echoed. The intent is simply to make it easier to understand the setup process, and possibly adapt things as needed.
+3. A separate user account for running the service is recommended. The default setup assumes that current user will run the service
 
 You will have to break the `journalctl -fu` command being run at the end of this install / update script.
 
@@ -140,6 +144,7 @@ Available environment settings:
 
 * `HOMELY_USER` - Your Homely username (normally your email address)
 * `HOMELY_PASSWORD` - Your Homely password
+* `HOMELY_HOME` - Your Homely instance name to use if you have more than one alarm set up
 * `MQTT_DISCOVERY` - The MQTT discovery topic prefix, normally *homeassistant*
 * `MQTT_STATE` - The MQTT state topic prefix. By default this is now homely
 * `MQTT_SERVER` - Defaults to 127.0.0.1

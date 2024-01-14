@@ -16,7 +16,7 @@ Environment="TOPDIR=/opt/homely2mqtt"
 # .... add secrets etc in here - readable only by domo user
 EnvironmentFile=/etc/default/homely2mqtt
 #
-ExecStart=/bin/bash -c 'source $TOPDIR/venv/bin/activate && exec python3 -u $TOPDIR/homely2mqtt.py $FLAGS'
+ExecStart=/bin/bash -c 'source $TOPDIR/bin/activate && exec python3 -u $TOPDIR/homely2mqtt.py $FLAGS'
 WorkingDirectory=/opt/homely2mqtt/
 Restart=always
 User=domo
