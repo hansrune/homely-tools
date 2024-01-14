@@ -44,8 +44,6 @@ git clone https://github.com/hansrune/homely-tools.git
 cd homely-tools
 ```
 
-... or update your local source using `git pull`
-
 ### Install 
 
 You will have to create a configuration file as [described below](#Configuration-options) to contain your Homely account details as a minimum
@@ -60,6 +58,8 @@ If you are happy with running the service from `/opt/homely2mqtt` as the current
 ```
 
 You can easily follow the status from `systemctl status homely2mqtt` or `journalctl -fu homely2mqtt`
+
+### Updates
 
 Updates can be done by:
 
