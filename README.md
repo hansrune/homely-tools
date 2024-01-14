@@ -102,8 +102,6 @@ INFO:engineio.client:Sending packet PING data None
 INFO:engineio.client:Received packet PONG data None
 ```
 
-You will have to break the `journalctl -fu` command being run at the end of this install / update script.
-
 ### Configuration options
 
 Available command line options can be found from `/opt/homely2mqtt/homely2mqtt.py -h`
