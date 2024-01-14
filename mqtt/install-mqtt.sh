@@ -1,7 +1,7 @@
 #!/bin/bash
 PROG=$( basename $0 .sh )
 SERVICE="homely2mqtt"
-REQUIREMENTS="requests paho.mqtt.client:paho-mqtt socketio:python-socketio[client]<5.0"
+REQUIREMENTS="requests paho.mqtt.client:paho-mqtt socketio:python-socketio[client]<5.0 yaml:pyyaml"
 
 SRCDIR=$( dirname $0 )
 DESTDIR="/opt/${SERVICE}/"
@@ -24,22 +24,20 @@ if [ ! -f "${ACTIVATE}" ]
 then
     echo "${PROG}: Setting up a python virtual environment in ${DESTDIR}"
     python3 -m venv "${DESTDIR}"
-fi
-
-if [ ! -f "${ACTIVATE}" ]
-then
-    echo "${PROG}: Activating python virtual environment in ${DESTDIR}"
     source "${ACTIVATE}"
+    pip3 install --upgrade pip
 else
-    echo "${PROG}: Problem activating python virtual environment in ${DESTDIR}"
-    exit 2
+    echo "${PROG}: Activating existing python virtual environment in ${DESTDIR}"
+    source "${ACTIVATE}"
 fi
 
 for R in ${REQUIREMENTS}
 do 
    python3 -c "import ${R%:*}" >& /dev/null && continue
-   echo "${PROG}: python3 cannot import ${R%:*}. Please install with \"pip3 install '${R#*:}'\" or similar" >&2
-   exit 1
+   echo "${PROG}: Will install ${R#*:}"
+   pip3 install "${R#*:}"
+   python3 -c "import ${R%:*}" >& /dev/null && continue
+   exit 2
 done
 
 if [ -f "${DESTDIR}/${SERVICE}.service" ] 
