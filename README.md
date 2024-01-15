@@ -110,7 +110,7 @@ Normally, command line options will be added to `FLAGS` settings in the systemct
 
 Settings like username and password should be added to the service environment file (`/etc/default/homely2mqtt`) with strict permissions (`chmod 600 /etc/default/homely2mqtt`). 
 
-You should also run the service as a dedicated user (default *domo*) to avoid exposing the environment to non-root users. If you want to change this username, modify `homely2mqtt.service`
+You should also run the service as a dedicated user to avoid exposing the environment to non-root users. The user defaults to the user that runs the install script (*$USER*). If you want to change this username, modify `homely2mqtt.service`. The install script will only change the user and group if *domo*
 
 Available environment settings:
 
