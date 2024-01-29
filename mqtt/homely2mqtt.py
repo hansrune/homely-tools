@@ -165,23 +165,23 @@ hm = MQTT_AD_Config(
     logger = logger
 )
 
-main_alarm = MQTT_AD_Device("Alarm", "alarmstate", "selector")
+main_alarm = MQTT_AD_Device("Gateway", "Alarm", "alarmstate", "selector")
 main_alarm.device_config_append({ 
     "options" : [ "Disarmed", "Armed stay", "Armed night", "Armed away", "Alarmed", "Transitioning", "Error" ],
     "initial_option" : "Transitioning"
 })
 main_alarm.device_config_publish()
 
-devices_lqi = MQTT_AD_Device(f"Devices", "links", "linkpercent")
+devices_lqi = MQTT_AD_Device("Gateway", "Minimum link quality", "links", "linkpercent")
 devices_lqi.device_config_publish()
 
-devices_tamper = MQTT_AD_Device(f"Devices", "tamper", "tamper")
+devices_tamper = MQTT_AD_Device("Gateway", "Tamper switches", "tamper", "tamper")
 devices_tamper.device_config_publish()
 
-devices_online = MQTT_AD_Device(f"Devices", "connectivity", "connectivity")
+devices_online = MQTT_AD_Device("Gateway", "Connectivities", "connectivity", "connectivity")
 devices_online.device_config_publish()
 
-devices_lowbat = MQTT_AD_Device(f"Devices", "battery", "battery")
+devices_lowbat = MQTT_AD_Device("Gateway", "Battery states", "battery", "battery")
 devices_lowbat.device_config_publish()
 
 for d in hs['devices']:
@@ -199,15 +199,15 @@ for d in hs['devices']:
             logger.debug(f"Serial {serial} --> {modelname} name {devname} feature {feature} {state} {dv}")
             if feature == 'temperature':
                 sub_device="temp"
-                component[f"{devid}_{sub_device}"] = MQTT_AD_Device(name_model, feature, sub_device, d)
+                component[f"{devid}_{sub_device}"] = MQTT_AD_Device(devname, modelname, feature, sub_device, d)
                 component[f"{devid}_{sub_device}"].device_config_publish()
             elif modelname == "Motion Sensor Mini" and state == 'alarm':
                 sub_device="motion"
-                component[f"{devid}_{sub_device}"] = MQTT_AD_Device(name_model, feature, sub_device, d)
+                component[f"{devid}_{sub_device}"] = MQTT_AD_Device(devname, modelname, feature, sub_device, d)
                 component[f"{devid}_{sub_device}"].device_config_publish()
             elif modelname == "Window Sensor" and state == 'alarm':
                 sub_device="door"
-                component[f"{devid}_{sub_device}"] = MQTT_AD_Device(name_model, feature, sub_device, d)
+                component[f"{devid}_{sub_device}"] = MQTT_AD_Device(devname, modelname, feature, sub_device, d)
                 component[f"{devid}_{sub_device}"].device_config_publish()
 
 

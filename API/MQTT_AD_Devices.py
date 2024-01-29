@@ -95,26 +95,28 @@ class MQTT_AD_Config(dict):
 
 class MQTT_AD_Device:
 
-    def __init__(self, main_name, object_name, component, devattr={}):
+    def __init__(self, devname, model_name, object_name, component, devattr={}):
+        main_name            = normalized_name(f"{devname}_{model_name}")
         self.friendly_name   = normalized_name(f"{mqconf.site} {main_name} {object_name}")
-        main_name            = normalized_name(f"{mqconf.site}_{main_name}")
+        full_name            = normalized_name(f"{mqconf.site}_{main_name}")
+        main_name            = normalized_name(f"{main_name}")
         device_component     = devtype_component(component)
-        device_topic         = f"{mqconf.state_topic}/{main_name}/{object_name}"
+        device_topic         = f"{mqconf.state_topic}/{full_name}/{object_name}"
         self.state_topic     = f"{device_topic}/state"
-        self.discovery_topic = f"{mqconf.discovery_topic}/{device_component}/{main_name}/{object_name}/config"
+        self.discovery_topic = f"{mqconf.discovery_topic}/{device_component}/{full_name}/{object_name}/config"
         self.send_interval   = 1200
         self.last_update     = 0
         self.last_timestamp  = 'init time'
         self.last_state      = 'init state'
         self.config = { 
-            "name": main_name,
-            "unique_id": f"{main_name}_{object_name}",
-            #"object_id": f"{mqconf.site}_{main_name}_{object_name}",
+            "name": full_name,
+            "unique_id": f"{full_name}_{object_name}",
             "state_topic" : f"{device_topic}/state",
             "command_topic" : f"{device_topic}/set",
             "device" : {
-                "identifiers" : [ main_name ],
+                "identifiers" : [ full_name ],
                 "name" : main_name,
+                "model" : model_name,
                 "manufacturer" : "Homely provided",
                 "model" : "Internal device"
             }
