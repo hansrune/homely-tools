@@ -294,10 +294,10 @@ while True:
         for feature in d['features'].keys():
             ds=d['features'][feature]['states']
             for state in ds.keys():
-                dv = ds[state]['value']
-                dt = ds[state]['lastUpdated']
+                dv = ds[state]['value']       if 'value'       in ds[state] else None 
+                dt = ds[state]['lastUpdated'] if 'lastUpdated' in ds[state] else None
                 if dv is None or dt is None:
-                    # logger.debug("Device %s state %s has missing value or timestamp", parent_name, state)
+                    logger.info(f"No value or lastUpdated for feature={feature}: device state ds={ds} state={state} ds[state]={ds[state]}")
                     continue
                 name_model = f"{devname}_{modelname}"
                 logger.debug(f"Serial {serial} --> {modelname} name {devname} feature {feature} {state} {dv}")
