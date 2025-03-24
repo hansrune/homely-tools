@@ -99,7 +99,7 @@ elif args.verbose:
 h = HomelyAPI(logger=logger)
 
 if args.domoticzurl != "":
-    domoticz_settings = h.get("Domoticz settings", args.domoticzurl + '/json.htm?type=settings')
+    domoticz_settings = h.get("Domoticz settings", args.domoticzurl + '/json.htm?type=command&param=getsettings')
     domoticz_seccode  = domoticz_settings['SecPassword']
     logger.debug("Domoticz security setting is %s",domoticz_seccode)
 
