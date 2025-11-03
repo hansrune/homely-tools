@@ -154,7 +154,7 @@ if args.siteprefix != "":
 else:
     sitename = hs['name']
 
-mq = mqtt.Client(progname)
+mq = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, progname)
 mq.connect(args.mqttserver, port=args.mqttport, keepalive=600)
 mq.loop_start()
 hm = MQTT_AD_Config(
