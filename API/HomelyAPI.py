@@ -25,6 +25,8 @@ class HomelyAPI:
         self.locations   = []
         self.locationid  = 'N/A'
         self.homestate   = {}
+        self.okhomestate = {}
+        self.statuscode  = 0
         self.alarmstate  = {}
         self.auth        = None
         self.tokenexp    = 0
@@ -37,7 +39,8 @@ class HomelyAPI:
 
     def response(self, op, url, response):
         self.logger.debug("%s request - URL %s --> status %d, response:\n%s",op,url,response.status_code,response.text)
-        if response.status_code not in [ 200, 201 ]:
+        self.statuscode  = response.status_code
+        if response.status_code not in [ 200, 201, 429 ]:
             self.logger.error("Error code %ss\n%s",response.status_code, response.text)
             exit(2)
         return json.loads(response.text)
@@ -99,6 +102,16 @@ class HomelyAPI:
 
     def homestatus(self):
         self.homestate = self.get("Home status", homely_homes + self.locationid, headers={ 'Authorization' : 'Bearer ' + self.auth['access_token'] } )
+        if self.statuscode in [ 200, 201 ]:
+            self.logger.info("Home status not rate limited - saving new state")
+            self.okhomestate = self.homestate
+        elif self.statuscode in [ 429 ]:
+            if not self.okhomestate:
+                self.logger.error("Home status is rate limited at startup. Startup delay is needed")
+                exit(2)
+            else:
+                self.logger.warn("Home status rate limited - using previous state")
+                return self.okhomestate
         return self.homestate
 
     def sio_calls(self):
