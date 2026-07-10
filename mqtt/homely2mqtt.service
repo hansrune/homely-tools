@@ -20,7 +20,7 @@ ExecStart=/bin/bash -c 'source $TOPDIR/bin/activate && exec python3 -u $TOPDIR/h
 WorkingDirectory=/opt/homely2mqtt/
 Restart=always
 User=domo
-RestartSec=30
+RestartSec=120
 #Restart=on-failure
 
 [Install]
