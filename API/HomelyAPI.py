@@ -72,7 +72,7 @@ class HomelyAPI:
         if epochtime + 300 >= self.tokenexp:
             self.auth      = self.post("Refresh access", homely_reauth_url, json={ 'refresh_token' : self.auth['refresh_token'] })
             self.tokenexp  = epochtime + self.auth['expires_in']
-        self.logger.info("Access token expiry in %d seconds", self.tokenexp - epochtime - 300)
+            self.logger.info("New access token expires in %d seconds", self.tokenexp - epochtime)
 
         #
         # Update also socketio connection data - in case of restart

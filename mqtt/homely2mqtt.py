@@ -81,7 +81,7 @@ argp.add_argument('-s','--save',            default="",                      hel
 argp.add_argument(     '--home',            default=def_homename,            help="Home name in Homely") 
 argp.add_argument(     '--siteprefix',      default="",                      help="Site prefix / home name") 
 argp.add_argument(     '--domoticzurl',     default="",                      help="Homely password (only if you are alone on your system)") 
-argp.add_argument(     '--sleep',           default=120, type=int,           help="Sleep interval") 
+argp.add_argument(     '--sleep',           default=1200, type=int,          help="Sleep interval") 
 argp.add_argument('-d','--debug',           action="store_true",             help="Debug")
 argp.add_argument('-v','--verbose',         action="store_true",             help="Verbose")
 argp.add_argument(     '--discoveryprefix', default=def_discovery_prefix,    help="MQTT HA discovery prefix")
@@ -268,6 +268,8 @@ while True:
         time.sleep(5)
         sleepsec = sleepsec + 5
         siorc = h.sioexit()
+        # Real token refresh is done only if needed - with a margin
+        token = h.tokenrefresh()
         if siorc > 0:
             logger.error("SocketIO initiated exit ... ")
             sys.exit(siorc)
@@ -275,8 +277,7 @@ while True:
     sleepfor = args.sleep
 
     logger.info("Refreshing alarm status ... ")
-    token = h.tokenrefresh()
-    hs    = h.homestatus()
+    hs = h.homestatus()
     alarm_state(hs['alarmState'])
 
     devs_online  = "ON"
